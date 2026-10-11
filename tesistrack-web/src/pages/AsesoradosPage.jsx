@@ -23,8 +23,13 @@ export default function AsesoradosPage() {
       .finally(() => setCargando(false))
   }, [])
 
-  const conPendientes = asesorados.filter(
-    (a) => a.entregasPorRevisar + a.observacionesPendientes + a.tareasVencidas > 0,
+  const conSeguimiento = asesorados.filter(
+      (a) =>
+          a.entregasPorRevisar +
+            a.observacionesPendientes +
+            a.hitosEnFalta +
+            a.tareasVencidas >
+          0,
   ).length
 
   if (cargando) return <Cargando />
@@ -35,10 +40,12 @@ export default function AsesoradosPage() {
         titulo="Mis asesorados"
         descripcion={
           asesorados.length === 0
-            ? 'Los estudiantes que estás acompañando.'
-            : conPendientes === 0
-              ? 'Todo al día: ningún asesorado espera algo tuyo.'
-              : `${conPendientes} de ${asesorados.length} necesitan tu atención.`
+              ? 'Los estudiantes que estás acompañando.'
+              : conSeguimiento === 0
+                  ? 'Todo al día: no hay señales que requieran seguimiento.'
+                  : `${conSeguimiento} de ${asesorados.length} ${
+                      conSeguimiento === 1 ? 'requiere' : 'requieren'
+                  } seguimiento.`
         }
       />
 
@@ -60,15 +67,18 @@ export default function AsesoradosPage() {
       ) : (
         <div className="asesorados">
           {asesorados.map((a) => {
-            const pendientes =
-              a.entregasPorRevisar + a.observacionesPendientes + a.tareasVencidas
+            const paraAtender = a.entregasPorRevisar + a.observacionesPendientes
+            const fueraDePlazo = a.hitosEnFalta + a.tareasVencidas
+            const pendientes = paraAtender + fueraDePlazo
             const progreso =
               a.hitosTotales === 0 ? 0 : Math.round((a.hitosCompletados / a.hitosTotales) * 100)
 
             return (
               <article
-                key={a.proyectoId}
-                className={`asesorado ${pendientes === 0 ? 'is-al-dia' : ''}`}
+                  key={a.proyectoId}
+                  className={`asesorado ${
+                    pendientes === 0 ? 'is-al-dia' : fueraDePlazo > 0 ? 'is-en-falta' : ''
+                  }`}
               >
                 <header className="asesorado__cabecera">
                   <div>
@@ -101,34 +111,66 @@ export default function AsesoradosPage() {
                 )}
 
                 {pendientes === 0 ? (
-                  <p className="asesorado__ok">✓ Nada pendiente de tu lado.</p>
+                  <p className="asesorado__ok">✓ Sin alertas de seguimiento.</p>
                 ) : (
-                  <ul className="asesorado__pendientes">
-                    {a.entregasPorRevisar > 0 && (
-                      <li>
-                        <Link to="/observaciones">
-                          {a.entregasPorRevisar} {a.entregasPorRevisar === 1 ? 'hito' : 'hitos'} por
-                          revisar
-                        </Link>
-                      </li>
-                    )}
-                    {a.observacionesPendientes > 0 && (
-                      <li>
-                        <Link to="/observaciones">
-                          {a.observacionesPendientes}{' '}
-                          {a.observacionesPendientes === 1 ? 'observación' : 'observaciones'} sin
-                          resolver
-                        </Link>
-                      </li>
-                    )}
-                    {a.tareasVencidas > 0 && (
-                      <li className="is-vencida">
-                        <Link to="/tareas">
-                          {a.tareasVencidas} {a.tareasVencidas === 1 ? 'tarea vencida' : 'tareas vencidas'}
-                        </Link>
-                      </li>
-                    )}
-                  </ul>
+                    <ul className="asesorado__pendientes" aria-label="Señales de seguimiento">
+                      {a.hitosEnFalta > 0 && (
+                          <li className="is-en-falta">
+                            <Link to="/hitos">
+                              <span className="semaforo semaforo--falta" aria-hidden="true">
+                                !
+                              </span>
+                              <span>
+                                {a.hitosEnFalta} {a.hitosEnFalta === 1 ? 'hito en falta' : 'hitos en falta'}
+                              </span>
+                            </Link>
+                          </li>
+                      )}
+
+                      {a.tareasVencidas > 0 && (
+                          <li className="is-vencida">
+                            <Link to="/tareas">
+                              <span className="semaforo semaforo--falta" aria-hidden="true">
+                                !
+                              </span>
+                              <span>
+                                {a.tareasVencidas}{' '}
+                                {a.tareasVencidas === 1 ? 'tarea vencida' : 'tareas vencidas'}
+                              </span>
+                            </Link>
+                          </li>
+                      )}
+
+                      {a.entregasPorRevisar > 0 && (
+                          <li>
+                            <Link to="/observaciones">
+                              <span className="semaforo semaforo--revisar" aria-hidden="true">
+                                R
+                              </span>
+                              <span>
+                                {a.entregasPorRevisar}{' '}
+                                {a.entregasPorRevisar === 1 ? 'hito por revisar' : 'hitos por revisar'}
+                              </span>
+                            </Link>
+                          </li>
+                      )}
+
+                      {a.observacionesPendientes > 0 && (
+                          <li>
+                            <Link to="/observaciones">
+                              <span className="semaforo semaforo--observado" aria-hidden="true">
+                                O
+                              </span>
+                              <span>
+                                {a.observacionesPendientes}{' '}
+                                {a.observacionesPendientes === 1
+                                    ? 'observación sin resolver'
+                                    : 'observaciones sin resolver'}
+                              </span>
+                            </Link>
+                          </li>
+                      )}
+                    </ul>
                 )}
               </article>
             )
