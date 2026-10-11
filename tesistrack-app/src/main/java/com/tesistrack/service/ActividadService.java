@@ -142,7 +142,7 @@ public class ActividadService {
         hito.setNombre(actividad.getNombre());
         hito.setDescripcion(actividad.getDescripcion());
         hito.setFechaLimite(actividad.getFechaLimite());
-        hito.setOrden(actividad.getOrden());
+        hito.setOrden(siguienteOrdenHito(proyecto.getId()));
         hitoRepository.save(hito);
     }
 
@@ -210,6 +210,13 @@ public class ActividadService {
             .mapToInt(Actividad::getOrden)
             .max()
             .orElse(0) + 1;
+    }
+
+    private int siguienteOrdenHito(Long proyectoId) {
+        return hitoRepository.findByProyectoIdOrderByOrdenAsc(proyectoId).stream()
+                .mapToInt(Hito::getOrden)
+                .max()
+                .orElse(0) + 1;
     }
 
     private Actividad buscarEnArea(Long actividadId, Long areaId) {
