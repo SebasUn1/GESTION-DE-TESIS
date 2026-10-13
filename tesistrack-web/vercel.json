@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://URL-DE-TU-BACKEND.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://gestion-de-tesis.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
