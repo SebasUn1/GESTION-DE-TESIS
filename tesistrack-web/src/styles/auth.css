@@ -1,0 +1,844 @@
+.auth-shell {
+  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --ui: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --link: #9c5a2c;
+  /* oro de sello académico: el mismo del pulso que recorre los hitos */
+  --oro: #d8b05c;
+  --oro-suave: #e2c583;
+
+  min-height: 100svh;
+  display: flex;
+  font-family: var(--ui);
+}
+
+/* ------------------------------------------------------------------ *
+ * Panel izquierdo — marca
+ * ------------------------------------------------------------------ */
+.auth-hero {
+  position: relative;
+  flex: 1 1 52%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 56px 60px;
+  overflow: hidden;
+  text-align: left;
+  color: #e8ecf4;
+  background:
+    radial-gradient(120% 90% at 20% 0%, rgba(46, 71, 116, 0.55) 0%, rgba(11, 23, 40, 0) 60%),
+    linear-gradient(165deg, #132441 0%, #0d1a2e 45%, #070d18 100%);
+}
+
+/* textura sutil que evoca páginas de un libro detrás del degradado */
+.auth-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 9px
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* lienzo animado: partículas a la deriva + el pulso que recorre los hitos */
+.hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.auth-hero__content {
+  position: relative;
+  z-index: 1;
+  max-width: 470px;
+  margin-block: auto;
+}
+
+/* Velo detrás del texto. Va fuerte y con una meseta antes de desvanecerse:
+   la animación pasa por atrás y el titular tiene que ganar siempre. */
+.auth-hero__content::before {
+  content: '';
+  position: absolute;
+  inset: -80px -140px -80px -110px;
+  background: radial-gradient(
+    76% 62% at 30% 50%,
+    rgba(6, 12, 22, 0.97) 0%,
+    rgba(6, 12, 22, 0.9) 45%,
+    rgba(6, 12, 22, 0) 100%
+  );
+  z-index: -1;
+  pointer-events: none;
+}
+
+.hero__birrete {
+  width: 116px;
+  height: auto;
+  display: block;
+  margin-bottom: 26px;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
+}
+
+.hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--oro-suave);
+  margin: 0 0 16px;
+}
+
+/* regla corta que ancla el eyebrow, del mismo oro que el pulso del fondo */
+.hero__eyebrow::before {
+  content: '';
+  width: 26px;
+  height: 1px;
+  background: var(--oro);
+  flex: none;
+}
+
+.auth-hero h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  color: #fff;
+  font-size: clamp(38px, 4.2vw, 56px);
+  line-height: 104%;
+  letter-spacing: -1px;
+  margin: 0 0 22px;
+}
+
+.hero__texto {
+  color: #a3afc6;
+  font-size: 16.5px;
+  line-height: 160%;
+  margin: 0;
+  max-width: 42ch;
+}
+
+/* línea de estado: acompaña al pulso del fondo y muestra el mismo
+   vocabulario de badges que se usa dentro del panel */
+.hero__estado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(214, 226, 247, 0.14);
+  min-height: 30px;
+}
+
+.hero__estado-hito {
+  font-size: 14px;
+  color: #d5deee;
+  font-weight: 500;
+}
+
+.auth-hero__footer {
+  position: relative;
+  z-index: 1;
+  color: #7c869c;
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Panel derecho — tarjeta del formulario
+ * ------------------------------------------------------------------ */
+.auth-panel {
+  flex: 1 1 48%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: #fff;
+}
+
+/* 434px = los 372 de contenido de la tarjeta + sus 30 de padding a cada lado y
+   el borde. Se expresa en border-box para que en pantallas angostas la tarjeta
+   se achique en vez de desbordar: antes la salvaba el flex-shrink de .auth-panel,
+   que dejó de aplicarle al envolverla en este contenedor. */
+.auth-panel__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: 100%;
+  max-width: 434px;
+}
+
+/* ---- volver a la portada ---- */
+.auth-volver {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  color: #55585f;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.auth-volver:hover {
+  color: #0a0a0c;
+  border-color: #d3d4d8;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.auth-volver:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.auth-volver__flecha {
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.auth-volver:hover .auth-volver__flecha {
+  transform: translateX(-2px);
+}
+
+.auth-card {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 434px;
+  padding: 34px 30px 30px;
+  border-radius: 20px;
+  border: 1px solid #b6b8bd;
+  overflow: hidden;
+  text-align: center;
+  background:
+    linear-gradient(148deg, #fbfbfc 0%, #e9eaec 34%, #d3d4d8 68%, #e4e5e8 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.06) inset,
+    0 24px 48px -24px rgba(15, 23, 42, 0.45);
+}
+
+/* vetas verticales del acabado metálico */
+.auth-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.5) 0px,
+    rgba(255, 255, 255, 0.5) 1px,
+    rgba(0, 0, 0, 0.02) 1px,
+    rgba(0, 0, 0, 0.02) 3px
+  );
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.auth-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- logo (estilos propios en styles/brand.css) ---- */
+/* Es un <a> al inicio: sin subrayado ni azul de link, sobre todo por la marca
+   de respaldo, que incluye la palabra "Tesis Track" como texto. */
+.brand-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- encabezado ---- */
+.auth-card h2 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 115%;
+  color: #0a0a0c;
+  margin: 0 0 6px;
+}
+
+.auth-subtitle {
+  color: #3f4148;
+  font-size: 13.5px;
+  line-height: 150%;
+  margin-bottom: 22px;
+}
+
+.auth-subtitle .link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* ---- correo ya registrado ---- */
+.auth-en-uso {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 12px 13px;
+  border-radius: 9px;
+  border: 1px solid #f0dcbc;
+  background: #fff5e6;
+  text-align: left;
+}
+
+.auth-en-uso__titulo {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #6b4300;
+}
+
+.auth-en-uso__salidas {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-enlace {
+  border: 1px solid #d9c39a;
+  background: #fff;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b4300;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-enlace:hover:not(:disabled) {
+  background: #fffaf1;
+  border-color: #c2a468;
+}
+
+.btn-enlace:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.auth-en-uso__nota {
+  margin: 0;
+  font-size: 12px;
+  color: #8a6323;
+}
+
+/* ---- medidor de fuerza de la contraseña ---- */
+.fuerza {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  margin-top: -4px;
+}
+
+.fuerza__barra {
+  display: flex;
+  gap: 4px;
+}
+
+.fuerza__tramo {
+  height: 4px;
+  flex: 1;
+  border-radius: 999px;
+  background: #d5d6db;
+  transition: background-color 0.2s ease;
+}
+
+/* El color acompaña; quien no lo distinga se guía por el texto de al lado. */
+.fuerza--muy-debil .fuerza__tramo.is-lleno {
+  background: #b3261e;
+}
+
+.fuerza--debil .fuerza__tramo.is-lleno {
+  background: #c2600e;
+}
+
+.fuerza--aceptable .fuerza__tramo.is-lleno {
+  background: #a07800;
+}
+
+.fuerza--fuerte .fuerza__tramo.is-lleno {
+  background: #2f7d43;
+}
+
+.fuerza--muy-fuerte .fuerza__tramo.is-lleno {
+  background: #1c6b39;
+}
+
+.fuerza__linea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.fuerza__etiqueta {
+  font-weight: 600;
+  color: #3f4148;
+}
+
+.fuerza--muy-debil .fuerza__etiqueta {
+  color: #8f1d1d;
+}
+
+.fuerza--debil .fuerza__etiqueta {
+  color: #8a4409;
+}
+
+.fuerza--fuerte .fuerza__etiqueta,
+.fuerza--muy-fuerte .fuerza__etiqueta {
+  color: #1c6b39;
+}
+
+.fuerza__minimo {
+  color: #6b6f79;
+}
+
+.fuerza__aviso,
+.fuerza__sugerencia {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #5a5d66;
+}
+
+.fuerza__aviso {
+  color: #8f1d1d;
+}
+
+/* ---- registro en dos pasos ---- */
+.auth-pasos {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #55585f;
+}
+
+.auth-pasos__punto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c3c5cb;
+}
+
+.auth-pasos__punto.is-activo {
+  background: #14151a;
+}
+
+.auth-pasos__texto {
+  margin-left: 4px;
+}
+
+/* elección de rol: dos tarjetas, no un <select> escondido en la lista */
+.auth-roles {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-roles legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #3f4148;
+}
+
+.auth-rol {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid #d0d1d6;
+  background: #f4f4f6;
+  cursor: pointer;
+  text-align: left;
+}
+
+.auth-rol:hover {
+  background: #fff;
+}
+
+.auth-rol.is-elegido {
+  border-color: #6f727a;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(20, 21, 26, 0.08);
+}
+
+.auth-rol input {
+  grid-row: span 2;
+  align-self: center;
+  accent-color: #14151a;
+  margin: 0;
+}
+
+.auth-rol__nombre {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #14151a;
+}
+
+.auth-rol__ayuda {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #5a5d66;
+}
+
+/* consentimiento: obligatorio, y por eso destacado del resto del formulario */
+.auth-consentimiento {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  border: 1px solid #d0d1d6;
+  background: rgba(255, 255, 255, 0.55);
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #3f4148;
+  cursor: pointer;
+}
+
+.auth-consentimiento input {
+  margin: 2px 0 0;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  accent-color: #14151a;
+}
+
+.auth-consentimiento label {
+  cursor: pointer;
+}
+
+/* Es un <button> y no un <a>: abre el modal, no navega. Se disfraza de enlace
+   porque eso es lo que la persona espera al leer "política de privacidad". */
+.auth-consentimiento__enlace {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.auth-consentimiento__enlace:hover {
+  color: #7a4520;
+}
+
+.auth-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.auth-atras {
+  border: none;
+  background: none;
+  padding: 4px;
+  font: inherit;
+  font-size: 13px;
+  color: #55585f;
+  cursor: pointer;
+}
+
+.auth-atras:hover:not(:disabled) {
+  color: #0a0a0c;
+}
+
+.auth-atras:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ---- campos ---- */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.auth-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-field > svg {
+  position: absolute;
+  left: 15px;
+  width: 18px;
+  height: 18px;
+  color: #8e929b;
+  pointer-events: none;
+}
+
+.auth-field input,
+.auth-field select {
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 14px 0 44px;
+  border-radius: 9px;
+  border: 1px solid #d0d1d6;
+  background: #f4f4f6;
+  font-family: inherit;
+  font-size: 14.5px;
+  color: #14151a;
+}
+
+.auth-field select {
+  padding-left: 14px;
+}
+
+.auth-field input::placeholder {
+  color: #8e929b;
+}
+
+.auth-field input:focus,
+.auth-field select:focus {
+  outline: none;
+  background: #fff;
+  border-color: #6f727a;
+  box-shadow: 0 0 0 3px rgba(20, 21, 26, 0.08);
+}
+
+/* etiqueta accesible, oculta visualmente */
+.auth-field label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- botones ---- */
+.auth-submit,
+.auth-oauth {
+  height: 48px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    background 0.15s ease;
+}
+
+.auth-submit {
+  margin-top: 4px;
+  border: 1px solid #000;
+  background: linear-gradient(180deg, #303239 0%, #0d0e12 100%);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset;
+}
+
+.auth-submit:hover:not(:disabled) {
+  filter: brightness(1.25);
+}
+
+.auth-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #cfd0d5;
+  background: #fff;
+  color: #14151a;
+}
+
+.auth-oauth:hover:not(:disabled) {
+  background: #f6f6f8;
+}
+
+.auth-oauth svg {
+  width: 18px;
+  height: 18px;
+}
+
+.auth-submit:disabled,
+.auth-oauth:disabled {
+  opacity: 0.68;
+  cursor: not-allowed;
+}
+
+/* ---- pie del formulario ---- */
+.auth-foot {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #3f4148;
+  text-align: center;
+}
+
+.auth-foot button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.auth-foot button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.auth-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(185, 28, 28, 0.1);
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  color: #8f1d1d;
+  font-size: 13px;
+  text-align: left;
+}
+
+/* ------------------------------------------------------------------ *
+ * Modo oscuro — la tarjeta mantiene el acabado plateado de la marca
+ * ------------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  .auth-panel {
+    background: #0f1117;
+  }
+
+  /* El panel se vuelve casi negro; el gris del enlace dejaría de leerse. */
+  .auth-volver {
+    color: #a2a8b6;
+  }
+
+  .auth-volver:hover {
+    color: #f2f4f8;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Entrada
+ *
+ * Una sola secuencia escalonada al cargar, no efectos sueltos por todos
+ * lados: el birrete, el texto y la tarjeta entran en orden de lectura.
+ * ------------------------------------------------------------------ */
+@keyframes hero-sube {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes card-entra {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero__birrete,
+.hero__eyebrow,
+.auth-hero h1,
+.hero__texto,
+.hero__estado {
+  animation: hero-sube 0.62s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.hero__birrete {
+  animation-delay: 0.05s;
+}
+.hero__eyebrow {
+  animation-delay: 0.14s;
+}
+.auth-hero h1 {
+  animation-delay: 0.22s;
+}
+.hero__texto {
+  animation-delay: 0.32s;
+}
+.hero__estado {
+  animation-delay: 0.42s;
+}
+
+.auth-card {
+  animation: card-entra 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s both;
+}
+
+/* el hito activo hace un fundido corto cada vez que el pulso avanza */
+.hero__estado-hito,
+.hero__estado .badge {
+  transition: opacity 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__birrete,
+  .hero__eyebrow,
+  .auth-hero h1,
+  .hero__texto,
+  .hero__estado,
+  .auth-card {
+    animation: none;
+  }
+
+  .auth-volver,
+  .auth-volver__flecha {
+    transition: none;
+  }
+
+  .auth-volver:hover .auth-volver__flecha {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Responsive
+ * ------------------------------------------------------------------ */
+@media (max-width: 980px) {
+  .auth-hero {
+    display: none;
+  }
+
+  .auth-panel {
+    flex: 1 1 100%;
+  }
+}

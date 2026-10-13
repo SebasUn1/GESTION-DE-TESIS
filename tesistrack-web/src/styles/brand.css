@@ -1,0 +1,55 @@
+/* Estilos de la marca. Viven aparte porque BrandLogo se usa tanto en la
+   pantalla de login (fondo claro) como en la barra lateral (fondo oscuro). */
+
+/* El logo es un lockup horizontal donde el monograma es mucho más grande que
+   el texto "TESIS TRACK". Si se limita por alto, el texto queda ilegible: por
+   eso manda el ancho y la altura sale sola. */
+.brand-logo--stacked {
+  width: 244px;
+  max-width: 100%;
+  height: auto;
+}
+
+.brand-logo--inline {
+  width: 196px;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Solo cuando la barra lateral cae al logo negro por no existir
+   logo-blanco.png: lo invierte para que se lea sobre el azul oscuro. */
+.brand-logo--invertido {
+  filter: invert(1) brightness(1.9);
+}
+
+.brand-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-fallback svg {
+  width: 64px;
+  height: auto;
+}
+
+.brand-fallback__word {
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-transform: uppercase;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.brand-fallback--stacked {
+  color: #0a0a0c;
+}
+
+.brand-fallback--stacked svg {
+  width: 88px;
+}
+
+.brand-fallback--inline {
+  color: #ffffff;
+}
