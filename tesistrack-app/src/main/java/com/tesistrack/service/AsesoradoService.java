@@ -13,6 +13,7 @@ import com.tesistrack.dto.AreaDto;
 import com.tesistrack.dto.AsesoradoDto;
 import com.tesistrack.dto.HitoDto;
 import com.tesistrack.dto.UserDto;
+import com.tesistrack.dto.Semaforo;
 import com.tesistrack.model.EstadoHito;
 import com.tesistrack.model.EstadoObservacion;
 import com.tesistrack.model.Hito;
@@ -91,6 +92,10 @@ public class AsesoradoService {
             .filter(h -> h.getEstado() == EstadoHito.ENTREGADO)
             .count();
 
+        int enFalta = (int) hitos.stream()
+                .filter(h -> Semaforo.de(h, hoy) == Semaforo.EN_FALTA)
+                .count();
+
         int observaciones = observacionRepository
             .findByEntregaHitoProyectoIdAndEstado(proyecto.getId(), EstadoObservacion.PENDIENTE)
             .size();
@@ -101,19 +106,23 @@ public class AsesoradoService {
             .count();
 
         return new AsesoradoDto(
-            proyecto.getEstudiantesOrdenados().stream().map(UserDto::from).toList(),
-            proyecto.getId(),
-            proyecto.getTitulo(),
-            AreaDto.sinCodigo(proyecto.getArea()),
-            actual == null ? null : HitoDto.from(actual),
-            completados,
-            hitos.size(),
-            porRevisar,
-            observaciones,
-            vencidas);
+                proyecto.getEstudiantesOrdenados().stream().map(UserDto::from).toList(),
+                proyecto.getId(),
+                proyecto.getTitulo(),
+                AreaDto.sinCodigo(proyecto.getArea()),
+                actual == null ? null : HitoDto.from(actual),
+                completados,
+                hitos.size(),
+                porRevisar,
+                observaciones,
+                enFalta,
+                vencidas);
     }
 
     private static int pendientes(AsesoradoDto a) {
-        return a.entregasPorRevisar() + a.observacionesPendientes() + a.tareasVencidas();
+        return a.entregasPorRevisar()
+                + a.observacionesPendientes()
+                + a.hitosEnFalta()
+                + a.tareasVencidas();
     }
 }

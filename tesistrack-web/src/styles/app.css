@@ -1361,6 +1361,10 @@
   border-left-color: #2f7d43;
 }
 
+.asesorado.is-en-falta {
+  border-left-color: #991b1b;
+}
+
 .asesorado__cabecera {
   display: flex;
   align-items: flex-start;
@@ -1437,6 +1441,9 @@
 }
 
 .asesorado__pendientes a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: #8a4409;
   text-decoration: none;
   border-bottom: 1px solid rgba(138, 68, 9, 0.3);
@@ -1449,6 +1456,18 @@
 .asesorado__pendientes .is-vencida a {
   color: #8f1d1d;
   border-bottom-color: rgba(143, 29, 29, 0.3);
+}
+
+.asesorado__pendientes .is-en-falta a {
+  color: #8f1d1d;
+  border-bottom-color: rgba(143, 29, 29, 0.3);
+}
+
+.asesorado__pendientes .semaforo {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
 }
 
 .filtro-area {
