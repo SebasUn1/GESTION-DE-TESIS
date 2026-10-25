@@ -629,6 +629,40 @@ La regla sale de la misma relación que ordena el resto de los permisos (la tesi
 
 Ver [[API#Mensajes privados]], [[Base de datos#Migración V4 - mensajes privados]] y [[Usuarios y roles#Mensajes privados]].
 
+## Decisión 29 - Aprobar la entrega y completar el hito en un paso
+
+¿Aprobar una versión tiene que cerrar el hito, o siguen siendo dos pasos?
+
+**Estado:** ✅ cerrada (2026-10-25) — **siguen siendo dos estados en el backend, pero el visor ofrece "Aprobar y completar hito" junto a "Aprobar entrega"**.
+
+Ensayando la demo se vio que, después de aprobar en el visor, el profesor tenía que ir a Hitos y cambiar el estado a mano: un paso que nadie recuerda y que deja el hito en *Entregado* con su versión ya aprobada. Lo común es que las dos cosas vayan juntas. El atajo hace las dos llamadas que ya existían (`PATCH /entregas/{id}/estado` y `PATCH /hitos/{id}/estado`). No hay endpoint nuevo.
+
+**Alternativa descartada:** que el backend complete el hito solo al aprobar una entrega. Se pierde un caso real (aprobar esta versión y aun así pedir un agregado antes de cerrar), y queda la pregunta de qué hacer con el hito si después se reabre la entrega. Con el atajo en la UI, la regla del backend no cambia y el profesor elige.
+
+> [!note] Consecuencia
+> `VisorArchivo` recibe `hitoId` opcional: desde el Dashboard del profesor y desde Entregas aparece el segundo botón. Sin `hitoId`, el visor queda como antes.
+
+## Decisión 30 - La clave JWT es obligatoria y el login tiene límite
+
+¿Con qué clave firma los tokens el backend si nadie la configura, y cuántos intentos de login se permiten?
+
+**Estado:** ✅ cerrada (2026-10-25) — **sin clave, el backend no arranca; el login se frena a los 10 intentos por cuenta y 60 por IP por minuto**.
+
+`application.properties` traía un valor por defecto para `JWT_SECRET`. Ese valor está en GitHub: un servidor que arrancara sin la variable firmaba con una clave pública, y cualquiera podía armar un token con el correo de otra persona y entrar como ella (`AccesoService` busca al usuario por el correo del token). Ahora `JwtService` exige al menos 32 caracteres y, si faltan, corta el arranque con un mensaje que dice qué hacer. En desarrollo la clave la pone el perfil `dev` y en Docker el compose (con `.env` para un servidor real).
+
+**El límite del login** reusa `LimitadorConsultas`. Es **por cuenta** para frenar a quien prueba contraseñas contra una persona, y **por IP**, más holgado, porque un aula entera sale a internet con la misma IP.
+
+> [!warning] El límite por IP no funcionaba detrás de nginx
+> En Docker todas las requests llegaban con la IP del contenedor del frontend, así que el límite de `/auth/existe` (10/min) era **uno solo para todos los usuarios**: en una clase registrándose a la vez, se bloqueaba. Se corrigió con `server.forward-headers-strategy=native`: Tomcat toma la IP real de `X-Forwarded-For`, pero solo si la request viene de una red interna.
+
+**Alternativas descartadas:**
+- **Dejar el default y avisar en el log:** nadie lee el log de un servidor que anda bien.
+- **Limitar solo los intentos fallidos:** es más justo, pero obliga a distinguir el resultado antes de contar. Con 10 por minuto, alguien que entra bien nunca llega al tope.
+- **Bloquear la cuenta tras N fallos:** le regala a cualquiera la forma de dejar a otra persona sin entrar.
+
+> [!note] Consecuencia
+> `./mvnw spring-boot:run` sin perfil ya no arranca: en desarrollo es `-Dspring-boot.run.profiles=dev` (ver [[Desarrollo#Desarrollo con recarga automática]]). El perfil `dev` también es el único que muestra el SQL en el log.
+
 ## Ver también
 - [[Feedback profesor]]
 - [[TesisTrack]]

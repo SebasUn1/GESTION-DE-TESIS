@@ -38,7 +38,7 @@ Base: `http://localhost:8080/api` en desarrollo (`VITE_API_URL` en el frontend).
 | Método | Ruta | Quién | Qué hace |
 |---|---|---|---|
 | `POST` | `/auth/register` | público | Crea usuario y devuelve `{token, user}`. El rol `COORDINADOR` da 400 (no es autoasignable). Acepta los datos de perfil del [[Decisiones pendientes#Decisión 9 - Qué datos personales pide el registro\|paso 2]] y exige `aceptaPolitica: true` |
-| `POST` | `/auth/login` | público | Devuelve `{token, user}` |
+| `POST` | `/auth/login` | público, **10/min por cuenta y 60/min por IP** | Devuelve `{token, user}`. Pasado el tope, `429` aunque la clave sea correcta ([[Decisiones pendientes#Decisión 30 - La clave JWT es obligatoria y el login tiene límite\|D30]]) |
 | `GET` | `/auth/me` | autenticado | Datos del usuario del token |
 | `GET` | `/auth/existe?email=…` | público, **10/min por IP** | `{ "existe": true\|false }`. Avisa en el paso 1 del registro que el correo ya tiene cuenta |
 

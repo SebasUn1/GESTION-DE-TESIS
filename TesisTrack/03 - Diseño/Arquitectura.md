@@ -129,7 +129,9 @@ Los badges de estado llevan **siempre ícono + texto**; el color es refuerzo, nu
 > [!info] Estado al 2026-10-07 — la parte de contenedores está hecha; falta el despliegue
 > **Hecho** (Alonso Castro, PRs #2 a #5, 2026-10-03): Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → **nginx**, que reenvía `/api` al backend, así que el navegador siempre habla con un solo origen); `docker-compose.yml` con base + backend + frontend en el puerto 3000; y dos workflows de GitHub Actions (`imagen-backend.yml`, `imagen-frontend.yml`) que **construyen y publican las imágenes en ghcr.io** al pushear a `main`. Las corridas del 2026-10-03 salieron en verde.
 >
-> **Falta**: un job que corra los **tests** (las imágenes se construyen con `-DskipTests` y el repo solo tiene `contextLoads`), el despliegue en AWS, y un `JWT_SECRET` real por variable de entorno (el compose trae uno de desarrollo).
+> **Hecho el 2026-10-25** (rama `mejoras/calidad`, sin pushear): `ci.yml` corre los tests del backend (36, con PostgreSQL vía Testcontainers) y el lint, los tests y el build del frontend en cada PR. Los workflows de imágenes ahora se disparan **solo cuando el CI termina en verde en `main`** y publican el commit que se probó. `JWT_SECRET` es obligatorio ([[Decisiones pendientes#Decisión 30 - La clave JWT es obligatoria y el login tiene límite|D30]]) y el compose lo toma de un `.env`.
+>
+> **Falta**: el despliegue en AWS/Vercel.
 
 > [!important] Por qué nginx y no CORS en producción
 > Servir el frontend y reenviar `/api` desde el mismo origen evita configurar CORS entre dominios y hace que desarrollo (proxy de Vite), Docker (nginx) y producción se comporten igual. Cuando el frontend se despliegue aparte (Vercel), `VITE_API_URL` pasa a apuntar a la URL del backend y vuelve a hacer falta `CORS_ALLOWED_ORIGINS`.

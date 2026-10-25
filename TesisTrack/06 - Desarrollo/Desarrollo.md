@@ -53,8 +53,10 @@ Tres contenedores: `db` (PostgreSQL 16), `backend` y `frontend` (nginx, que reen
 docker run -d --name tesistrack-db -e POSTGRES_DB=tesistrack -e POSTGRES_USER=tesistrack \
   -e POSTGRES_PASSWORD=tesistrack -p 5433:5432 postgres:16
 
-# 2. Backend (desde tesistrack-app) → :8080
-DB_PORT=5433 ./mvnw.cmd spring-boot:run        # PowerShell: $env:DB_PORT="5433"; .\mvnw.cmd spring-boot:run
+# 2. Backend (desde tesistrack-app) → :8080, con el perfil dev (clave JWT de desarrollo y SQL en el log)
+DB_PORT=5433 ./mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev
+#    PowerShell: $env:DB_PORT="5433"; .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
+#    Sin el perfil no arranca: falta JWT_SECRET (Decisión 30).
 
 # 3. Frontend (desde tesistrack-web) → :5173
 npm run dev
@@ -66,6 +68,9 @@ npm run dev
 ### Usuarios de prueba
 
 **Ya no vienen cargados**: una base nueva arranca vacía. Se registra un asesor y un estudiante desde `/registro`. *(Los `prueba@tesistrack.com` / `asesor@tesistrack.com` eran de la base local vieja, creada antes de Flyway.)*
+
+> [!success] Datos de demo — 2026-10-25
+> `demo/cargar-demo.ps1` (rama `feat/mensajes-privados`) carga por la API una profesora (`asesor@tesistrack.demo`) y una estudiante (`estudiante@tesistrack.demo`), clave `Demo2026!`, con una clase, una tesis y sus hitos en todos los estados: uno completado tras un ciclo de corrección, uno observado, uno entregado y dos pendientes. También carga asesorías, acuerdos, tareas, materiales y mensajes. Las fechas son relativas al día en que se corre. Va por la API y no por SQL para que los hashes, los estados y los permisos los ponga el backend. El recorrido para presentar está en `demo/GUION-DEMO.md`. Cubre el riesgo de los datos sucios de la [[Auditoría de requisitos#D. Riesgos|auditoría]].
 
 ## Avance
 
@@ -506,9 +511,26 @@ Rama `feat/mensajes-privados`, con PR sobre `feat/fase-1-6-rediseno`: depende de
 - [x] Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → nginx con proxy `/api`)
 - [x] `docker-compose.yml` con el stack completo — verificado el 2026-10-07: los 3 contenedores levantan, Flyway aplica `V1` y el login y el registro andan en el navegador
 - [x] GitHub Actions: `imagen-backend.yml` e `imagen-frontend.yml` construyen y **publican las imágenes en ghcr.io** al pushear a `main` (corridas del 2026-10-03 en verde)
-- [ ] **CI que corra tests**: las imágenes se construyen con `-DskipTests` y el único test del repo es `contextLoads`
-- [ ] Backend en AWS, frontend en Vercel (con root directory en las subcarpetas) — no empezado
-- [ ] `JWT_SECRET` real por variable de entorno en producción: el compose trae uno de desarrollo a la vista
+- [x] **CI que corra tests** (2026-10-25, rama `mejoras/calidad`, sin pushear todavía): `ci.yml` corre backend y frontend en cada PR, y las imágenes se publican solo si pasa. Ver [[#Mejoras de calidad (2026-10-25)]]
+- [ ] Backend en AWS, frontend en Vercel (con root directory en las subcarpetas) — no empezado. Lo que hace falta configurar está en `.env.example`
+- [x] `JWT_SECRET` obligatorio (2026-10-25): sin la variable el backend no arranca; el compose la toma de `.env` ([[Decisiones pendientes#Decisión 30 - La clave JWT es obligatoria y el login tiene límite|D30]])
+
+### Mejoras de calidad (2026-10-25)
+
+Rama local `mejoras/calidad`: parte de `feat/mensajes-privados` (la cadena de PRs #6 → #11) con `main` mergeado encima, así que trae también los arreglos #12, #13 y #14. **Todavía no se pusheó**. Mergearla a `main` cierra de una vez la cadena de PRs abiertos.
+
+- **Merge de `main`:** había dos conflictos. En `ui.jsx`, las dos ramas habían arreglado por separado el mismo bug de la fecha del día anterior; quedó una sola versión. En `AsesoradosPage` quedó la lógica de hitos en falta de #14 con los textos de asesorías privadas.
+- **Seguridad** ([[Decisiones pendientes#Decisión 30 - La clave JWT es obligatoria y el login tiene límite|D30]]): `JWT_SECRET` obligatorio, límite de login, IP real detrás de nginx (el límite por IP era uno solo para todos) y `show-sql` solo en `dev`.
+- **Tests en el repo** (la deuda de las 371 comprobaciones que vivían fuera): 36 en el backend con Testcontainers (PostgreSQL 16 real): ciclo de corrección, permisos por pertenencia del estudiante, del profesor ajeno y del coordinador, autenticación, límite de login, reparto de actividades, tipo de archivo por bytes, mensajes y validación de la clave. En el frontend, 16 con Vitest: fechas con TZ de Lima, previsualizables, medidor de contraseñas y formato. La infraestructura es la misma que la de la Fase 2, para que se junten sin fricción.
+- **CI:** `ci.yml`, más los workflows de imágenes que ahora se disparan solo con el CI en verde. `mvnw` no tenía bit de ejecución, así que en Linux iba a fallar.
+- **Visor:** "Aprobar y completar hito" ([[Decisiones pendientes#Decisión 29 - Aprobar la entrega y completar el hito en un paso|D29]]).
+- **`app.css`** partido en sus 5 capas (`styles/panel/`), importadas en el mismo orden. El CSS del build sale idéntico, con el mismo hash.
+- **Dependencias:** `react-router-dom` 6.30.6 (fijo, parche de seguridad), `vite` 8.3.5. Quedan 2 avisos moderados de React Router que solo se corrigen en la v7. No aplican: la app nunca navega a rutas que vengan del usuario y no usa SSR.
+- **Producción:** `.env.example` con `JWT_SECRET`, `DB_PASSWORD` y `CORS_ALLOWED_ORIGINS`. `.env` queda ignorado.
+- **Demo:** `demo/cargar-demo.ps1` y `demo/GUION-DEMO.md` (ver [[#Usuarios de prueba]]).
+
+> [!warning] La Fase 2 quedó respaldada, no integrada
+> El trabajo sin commitear de `D:\UTEC 2` (primer ingreso, grupos, V5, 30 tests) quedó en el commit local `cc7c5b3` de `feat/fase-2-estudiante`, sin revisar y fuera de esta rama. Al retomarla: su `IntegracionTest` agrega `grupal` a `crearTesis`, y sus estilos van en un archivo nuevo al final de `styles/app.css`, no en `panel.css`.
 
 **Fuera de alcance por ahora**
 - [ ] Login con Google — pendiente del OAuth Client ID
@@ -518,7 +540,7 @@ Rama `feat/mensajes-privados`, con PR sobre `feat/fase-1-6-rediseno`: depende de
 
 - **El logo** va en `tesistrack-web/public/marca/` (`logo.png` y `logo-blanco.png`). Hay un `LEEME.md` ahí con las instrucciones.
 - **Los badges de estado llevan siempre ícono + texto.** No es capricho: `OBSERVADO` y `COMPLETADO` son casi indistinguibles en deuteranopía. Ver [[Arquitectura#Color de los estados]].
-- **React va fijado en 18.3.1 exacto**, sin `^` ni `~`, igual que React Router. No lo actualices al agregar dependencias.
+- **React va fijado en 18.3.1 exacto**, sin `^` ni `~`, igual que React Router. No lo actualices al agregar dependencias. *(React Router pasó de 6.30.4 a 6.30.6 el 2026-10-25 por un parche de seguridad, y siguió fijo. `npm install` agrega `^` por defecto: usar `--save-exact`.)*
 
 ## Ver también
 - [[Arquitectura]]
