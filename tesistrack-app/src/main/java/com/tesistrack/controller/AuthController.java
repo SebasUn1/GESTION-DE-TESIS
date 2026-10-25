@@ -20,6 +20,7 @@ import com.tesistrack.dto.AuthResponse;
 import com.tesistrack.dto.LoginRequest;
 import com.tesistrack.dto.RegisterRequest;
 import com.tesistrack.dto.PerfilDto;
+import com.tesistrack.model.User;
 import com.tesistrack.service.AuthService;
 import com.tesistrack.service.PerfilService;
 
@@ -28,6 +29,9 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    static final int INTENTOS_LOGIN_POR_CUENTA = 10;
+    static final int INTENTOS_LOGIN_POR_IP = 60;
 
     private final AuthService authService;
     private final PerfilService perfilService;
@@ -61,8 +65,17 @@ public class AuthController {
         return authService.register(request);
     }
 
+    /**
+     * Sin límite, alguien podía probar contraseñas contra una cuenta sin parar. Se
+     * cuenta por cuenta y por IP: el primero frena el ataque a una persona; el
+     * segundo, más holgado, que una sola máquina recorra muchas cuentas. Holgado
+     * porque un aula entera sale a internet con la misma IP.
+     */
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+    public AuthResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
+        String mensaje = "Demasiados intentos de ingreso. Esperá un minuto y probá de nuevo.";
+        limitador.registrarUso("login-ip:" + http.getRemoteAddr(), INTENTOS_LOGIN_POR_IP, mensaje);
+        limitador.registrarUso("login:" + User.normalizarEmail(request.email()), INTENTOS_LOGIN_POR_CUENTA, mensaje);
         return authService.login(request);
     }
 
