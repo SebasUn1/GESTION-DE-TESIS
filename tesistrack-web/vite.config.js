@@ -16,4 +16,9 @@ export default defineConfig({
       '/api': 'http://localhost:8080',
     },
   },
+  test: {
+    // Lima es UTC-5: es donde se veía el bug de las fechas límite un día antes, así
+    // que los tests corren con esa zona aunque la máquina del CI esté en UTC.
+    env: { TZ: 'America/Lima' },
+  },
 })
