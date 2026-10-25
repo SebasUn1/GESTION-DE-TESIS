@@ -397,9 +397,14 @@ export default function EntregasPage() {
           fecha={viendo.createdAt}
           ruta={rutaArchivoEntrega(viendo.id)}
           entregaId={viendo.id}
+          hitoId={esAsesor ? hitoId : undefined}
           estado={viendo.estado}
           revisable={esAsesor}
-          onCambio={recargarEntregas}
+          onCambio={() => {
+            recargarEntregas()
+            // Completar el hito desde el visor cambia su badge en el selector de acá.
+            listarHitos(activoId).then(setHitos).catch(() => {})
+          }}
           onCerrar={() => setViendo(null)}
         />
       )}

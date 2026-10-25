@@ -4,6 +4,7 @@ import {
   apiBlob,
   apiDescargarArchivo,
   cambiarEstadoEntrega,
+  cambiarEstadoHito,
   crearObservacion,
   listarObservaciones,
 } from '../api/tesistrack'
@@ -37,7 +38,8 @@ const ZOOM_PASO = 25
  *
  * Con `entregaId`, al costado van las observaciones de esa versión; con `revisable`
  * (el profesor del grupo), además el dictamen: observar o aprobar sin salir del
- * visor. El backend vuelve a verificar que sea el profesor del grupo.
+ * visor. Con `hitoId`, también aprobar y dar el hito por completado de una vez. El
+ * backend vuelve a verificar que sea el profesor del grupo.
  *
  * El zoom es solo para imágenes: el PDF lo muestra el visor del navegador, que ya
  * trae el suyo.
@@ -51,6 +53,7 @@ export default function VisorArchivo({
   detalle,
   fecha,
   entregaId,
+  hitoId,
   estado,
   revisable = false,
   onCambio,
@@ -181,6 +184,7 @@ export default function VisorArchivo({
         {entregaId && (
           <PanelObservaciones
             entregaId={entregaId}
+            hitoId={hitoId}
             estado={estado}
             revisable={revisable}
             onCambio={onCambio}
@@ -196,10 +200,15 @@ export default function VisorArchivo({
  * Las observaciones de la versión que se está viendo y, para el profesor, el
  * dictamen. Observar pide el texto de la observación (una observación vacía no le
  * sirve al grupo); aprobar es un clic.
+ *
+ * Aprobar una versión y cerrar el hito siguen siendo dos decisiones en el backend
+ * (se puede aprobar una versión y pedir más igual), pero lo común es que vayan
+ * juntas: "Aprobar y completar hito" ahorra ir a Hitos a cambiar el estado a mano.
  */
-function PanelObservaciones({ entregaId, estado: estadoInicial, revisable, onCambio }) {
+function PanelObservaciones({ entregaId, hitoId, estado: estadoInicial, revisable, onCambio }) {
   const [notas, setNotas] = useState(null)
   const [estado, setEstado] = useState(estadoInicial)
+  const [hitoCompletado, setHitoCompletado] = useState(false)
   const [observando, setObservando] = useState(false)
   const [texto, setTexto] = useState('')
   const [ocupado, setOcupado] = useState(false)
@@ -235,12 +244,18 @@ function PanelObservaciones({ entregaId, estado: estadoInicial, revisable, onCam
     }
   }
 
-  async function aprobar() {
+  async function aprobar(completarHito = false) {
     setError(null)
     setOcupado(true)
     try {
-      await cambiarEstadoEntrega(entregaId, 'APROBADA')
-      setEstado('APROBADA')
+      if (estado !== 'APROBADA') {
+        await cambiarEstadoEntrega(entregaId, 'APROBADA')
+        setEstado('APROBADA')
+      }
+      if (completarHito) {
+        await cambiarEstadoHito(hitoId, 'COMPLETADO')
+        setHitoCompletado(true)
+      }
       onCambio?.()
     } catch (err) {
       setError(err.message)
@@ -335,11 +350,21 @@ function PanelObservaciones({ entregaId, estado: estadoInicial, revisable, onCam
               <button
                 type="button"
                 className="btn btn--aprobar"
-                onClick={aprobar}
+                onClick={() => aprobar()}
                 disabled={ocupado || estado === 'APROBADA'}
               >
                 {estado === 'APROBADA' ? '✓ Aprobada' : 'Aprobar entrega'}
               </button>
+              {hitoId && (
+                <button
+                  type="button"
+                  className="btn btn--aprobar"
+                  onClick={() => aprobar(true)}
+                  disabled={ocupado || hitoCompletado}
+                >
+                  {hitoCompletado ? '✓ Hito completado' : 'Aprobar y completar hito'}
+                </button>
+              )}
             </div>
           )}
         </div>

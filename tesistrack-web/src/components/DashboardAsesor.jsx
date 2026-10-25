@@ -230,6 +230,7 @@ export default function DashboardAsesor() {
           fecha={viendo.entrega.createdAt}
           ruta={rutaArchivoEntrega(viendo.entregaId)}
           entregaId={viendo.entregaId}
+          hitoId={viendo.hitoId}
           estado={viendo.entrega.estado}
           revisable
           onCambio={recargar}
