@@ -5,7 +5,9 @@ import {
   apiDescargarArchivo,
   cambiarEstadoEntrega,
   cambiarEstadoHito,
+  cambiarEstadoObservacion,
   crearObservacion,
+  listarEntregas,
   listarObservaciones,
 } from '../api/tesistrack'
 import EstadoBadge from './EstadoBadge'
@@ -197,13 +199,27 @@ export default function VisorArchivo({
 }
 
 /**
+ * Al cerrar un hito, lo que se le había observado a sus versiones ya está atendido.
+ * Si quedara pendiente, al grupo le seguiría apareciendo "Subir corrección" en un
+ * hito que ya está terminado.
+ */
+async function resolverPendientesDelHito(hitoId) {
+  const versiones = await listarEntregas(hitoId)
+  const notas = (await Promise.all(versiones.map((v) => listarObservaciones(v.id)))).flat()
+  await Promise.all(
+    notas.filter((n) => n.estado === 'PENDIENTE').map((n) => cambiarEstadoObservacion(n.id, 'RESUELTA')),
+  )
+}
+
+/**
  * Las observaciones de la versión que se está viendo y, para el profesor, el
  * dictamen. Observar pide el texto de la observación (una observación vacía no le
  * sirve al grupo); aprobar es un clic.
  *
  * Aprobar una versión y cerrar el hito siguen siendo dos decisiones en el backend
  * (se puede aprobar una versión y pedir más igual), pero lo común es que vayan
- * juntas: "Aprobar y completar hito" ahorra ir a Hitos a cambiar el estado a mano.
+ * juntas: "Aprobar y completar hito" ahorra ir a Hitos a cambiar el estado a mano,
+ * y da por resuelto lo que se le había observado a las versiones anteriores.
  */
 function PanelObservaciones({ entregaId, hitoId, estado: estadoInicial, revisable, onCambio }) {
   const [notas, setNotas] = useState(null)
@@ -247,20 +263,29 @@ function PanelObservaciones({ entregaId, hitoId, estado: estadoInicial, revisabl
   async function aprobar(completarHito = false) {
     setError(null)
     setOcupado(true)
+    let cambio = false
     try {
       if (estado !== 'APROBADA') {
         await cambiarEstadoEntrega(entregaId, 'APROBADA')
         setEstado('APROBADA')
+        cambio = true
       }
       if (completarHito) {
+        // Primero las observaciones: si eso falla, el hito no queda cerrado con
+        // correcciones colgando.
+        await resolverPendientesDelHito(hitoId)
         await cambiarEstadoHito(hitoId, 'COMPLETADO')
         setHitoCompletado(true)
+        cambio = true
+        await recargar()
       }
-      onCambio?.()
     } catch (err) {
       setError(err.message)
     } finally {
       setOcupado(false)
+      // Si la entrega se aprobó y falló completar el hito, la pantalla de atrás
+      // igual tiene que enterarse de la aprobación.
+      if (cambio) onCambio?.()
     }
   }
 
@@ -361,6 +386,7 @@ function PanelObservaciones({ entregaId, hitoId, estado: estadoInicial, revisabl
                   className="btn btn--aprobar"
                   onClick={() => aprobar(true)}
                   disabled={ocupado || hitoCompletado}
+                  title="Aprueba esta versión, da por resueltas las observaciones pendientes del hito y lo marca completado."
                 >
                   {hitoCompletado ? '✓ Hito completado' : 'Aprobar y completar hito'}
                 </button>

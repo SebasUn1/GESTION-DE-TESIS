@@ -1470,6 +1470,32 @@
   font-size: 10px;
 }
 
+/* Las marcas "!", "R" y "O" de cada señal. Venían de los .semaforo--* de main,
+   que el rediseño de la Fase 1.6 reemplazó por .celda--*: mismos colores que esas. */
+.asesorado__pendientes .semaforo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--gris-borde);
+  border-radius: 50%;
+  font-weight: 700;
+}
+.asesorado__pendientes .semaforo--falta {
+  color: var(--alerta-tinta);
+  background: var(--alerta-suave);
+  border-color: var(--alerta-borde);
+}
+.asesorado__pendientes .semaforo--revisar {
+  color: var(--violeta);
+  background: var(--violeta-suave);
+  border-color: var(--violeta-borde);
+}
+.asesorado__pendientes .semaforo--observado {
+  color: var(--aviso-tinta);
+  background: var(--aviso-suave);
+  border-color: var(--aviso-borde);
+}
+
 .filtro-area {
   display: flex;
   align-items: center;

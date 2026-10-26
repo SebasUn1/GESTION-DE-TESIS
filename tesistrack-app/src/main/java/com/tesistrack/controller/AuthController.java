@@ -66,16 +66,22 @@ public class AuthController {
     }
 
     /**
-     * Sin límite, alguien podía probar contraseñas contra una cuenta sin parar. Se
-     * cuenta por cuenta y por IP: el primero frena el ataque a una persona; el
-     * segundo, más holgado, que una sola máquina recorra muchas cuentas. Holgado
-     * porque un aula entera sale a internet con la misma IP.
+     * Sin límite, alguien podía probar contraseñas contra una cuenta sin parar. Hay
+     * dos topes: por cuenta <i>desde una IP</i>, que frena a quien ataca a una
+     * persona, y por IP, más holgado, que frena a una máquina que recorre muchas
+     * cuentas. Holgado porque un aula entera sale a internet con la misma IP.
+     *
+     * <p>El primero no es solo "por cuenta" a propósito: así, cualquiera que supiera
+     * un correo podía dejar a esa persona sin entrar mandando intentos fallidos.
+     * Ahora el que queda frenado es el que prueba, no la cuenta.
      */
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
         String mensaje = "Demasiados intentos de ingreso. Esperá un minuto y probá de nuevo.";
-        limitador.registrarUso("login-ip:" + http.getRemoteAddr(), INTENTOS_LOGIN_POR_IP, mensaje);
-        limitador.registrarUso("login:" + User.normalizarEmail(request.email()), INTENTOS_LOGIN_POR_CUENTA, mensaje);
+        String ip = http.getRemoteAddr();
+        limitador.registrarUso("login-ip:" + ip, INTENTOS_LOGIN_POR_IP, mensaje);
+        limitador.registrarUso("login:" + User.normalizarEmail(request.email()) + "|" + ip,
+            INTENTOS_LOGIN_POR_CUENTA, mensaje);
         return authService.login(request);
     }
 

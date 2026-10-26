@@ -397,7 +397,13 @@ export default function EntregasPage() {
           fecha={viendo.createdAt}
           ruta={rutaArchivoEntrega(viendo.id)}
           entregaId={viendo.id}
-          hitoId={esAsesor ? hitoId : undefined}
+          // Completar el hito desde una versión vieja cerraría el hito sin revisar la
+          // última; y en un hito ya completado no hay nada que completar.
+          hitoId={
+            esAsesor && viendo.version === ultimaVersion && hito?.estado !== 'COMPLETADO'
+              ? hitoId
+              : undefined
+          }
           estado={viendo.estado}
           revisable={esAsesor}
           onCambio={() => {

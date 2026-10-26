@@ -99,6 +99,19 @@ public abstract class IntegracionTest {
         return enviar("POST", ruta, u, json);
     }
 
+    /**
+     * Un POST que llega como si viniera de otra IP, igual que lo reenvía nginx. El
+     * backend confía en X-Forwarded-For solo si la request viene de una red interna,
+     * y los tests llaman desde 127.0.0.1.
+     */
+    protected Respuesta postDesde(String ip, String ruta, String json) {
+        HttpRequest.Builder b = HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + ruta))
+            .header("Content-Type", "application/json")
+            .header("X-Forwarded-For", ip)
+            .POST(HttpRequest.BodyPublishers.ofString(json));
+        return ejecutar(b, null);
+    }
+
     protected Respuesta put(String ruta, Usuario u, String json) {
         return enviar("PUT", ruta, u, json);
     }

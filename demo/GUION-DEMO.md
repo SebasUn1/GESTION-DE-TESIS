@@ -71,7 +71,7 @@ Además: una asesoría realizada con 2 acuerdos, una tarea hecha y otra pendient
 |---|---|---|---|
 | 1 | **Dashboard** | Su clase con el semáforo, **Para revisar** (Metodología v1 **y la v2 que Lucía acaba de subir**), **Necesitan atención** | "La profesora no busca tesis por tesis: el sistema le junta lo que está esperando su revisión." |
 | 2 | Para revisar → Marco teórico v2 → **Ver entrega** | Se abre el PDF en el visor, con el panel de observaciones | **En vivo.** "Revisa sin descargar nada." → **Aprobar y completar hito** → Cerrar |
-| 3 | **Observaciones** → Marco teórico | En la v1, **Marcar resuelta** en las dos observaciones | "Cierra lo que pidió, punto por punto." |
+| 3 | **Observaciones** → Marco teórico | La v1 con sus dos observaciones, ya **resueltas** | "Al completar el hito, lo que había pedido en la v1 queda atendido: queda el historial de qué se pidió y con qué versión se corrigió." |
 | 4 | **Hitos** | Marco teórico ya está verde | "Aprobar una versión y cerrar el hito son dos decisiones (puede aprobar y aun así pedir más), pero lo común es que vayan juntas, así que el visor ofrece las dos." |
 | 5 | Dashboard → Metodología v1 → **Ver entrega** → **Observar entrega** | Escribe, por ejemplo: *"Justifica el tamaño de la muestra: ¿por qué 400 imágenes por clase?"* → **Enviar observación** | **En vivo.** "Al observar, el hito vuelve a *Observado* y Lucía lo ve en su dashboard." |
 | 6 | **Mis clases** → Seminario de Tesis II → **Seguimiento** | La grilla alumnos × actividades con el semáforo | "Con 30 alumnos, esta es la vista que le dice a quién llamar primero." |
@@ -105,4 +105,4 @@ En el **Dashboard** de Lucía: Marco teórico ya está completado y Metodología
 - **¿Dónde quedan los archivos?** En PostgreSQL, hasta 15 MB por archivo. El tipo se verifica por el contenido, no por la extensión: solo se previsualizan PDF e imágenes reales.
 - **¿Tesis grupales?** Sí: cualquier integrante puede sumar compañeros por correo, y todos tienen los mismos permisos.
 - **¿Cómo saben que funciona?** 36 tests de backend contra un PostgreSQL real en Docker (ciclo de corrección, permisos, login) y 16 de frontend. Corren en GitHub Actions en cada pull request, y las imágenes Docker solo se publican si pasan.
-- **¿Qué pasa si alguien prueba contraseñas?** El login se frena a los 10 intentos por cuenta por minuto.
+- **¿Qué pasa si alguien prueba contraseñas?** Queda frenado a los 10 intentos por minuto contra una cuenta, y la dueña de la cuenta sigue entrando desde su máquina: se frena al que prueba, no a la cuenta.

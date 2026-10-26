@@ -47,19 +47,32 @@ class AutenticacionTest extends IntegracionTest {
     }
 
     @Test
-    void elLoginSeFrenaDespuesDeDiezIntentosALaMismaCuenta() {
+    void elLoginFrenaAQuienPruebaClavesSinDejarAfueraALaPersonaReal() {
         Usuario victima = estudiante("Vera Victima");
         String malo = "{\"email\": \"%s\", \"password\": \"adivinando\"}".formatted(victima.email());
-        for (int i = 0; i < 10; i++) {
-            assertThat(post("/api/auth/login", null, malo).status()).isEqualTo(401);
-        }
-        Respuesta frenado = post("/api/auth/login", null,
-            "{\"email\": \"%s\", \"password\": \"%s\"}".formatted(victima.email(), CLAVE));
-        assertThat(frenado.status()).as("ni con la clave correcta, hasta que pase el minuto").isEqualTo(429);
+        String bueno = "{\"email\": \"%s\", \"password\": \"%s\"}".formatted(victima.email(), CLAVE);
+        String atacante = "203.0.113.66";
 
-        Usuario otra = estudiante("Otra Cuenta");
-        assertThat(post("/api/auth/login", null,
-            "{\"email\": \"%s\", \"password\": \"%s\"}".formatted(otra.email(), CLAVE)).status())
-            .as("el freno es por cuenta: los demás siguen entrando").isEqualTo(200);
+        for (int i = 0; i < 10; i++) {
+            assertThat(postDesde(atacante, "/api/auth/login", malo).status()).isEqualTo(401);
+        }
+        assertThat(postDesde(atacante, "/api/auth/login", bueno).status())
+            .as("el atacante queda frenado aunque acierte, hasta que pase el minuto").isEqualTo(429);
+
+        assertThat(postDesde("198.51.100.20", "/api/auth/login", bueno).status())
+            .as("la dueña de la cuenta, desde su IP, sigue entrando").isEqualTo(200);
+    }
+
+    @Test
+    void unaMismaIpNoPuedeRecorrerCuentasSinFin() {
+        String ip = "203.0.113.77";
+        int frenadas = 0;
+        for (int i = 0; i < 61; i++) {
+            String intento = "{\"email\": \"%s\", \"password\": \"x\"}".formatted(correoUnico("barrido"));
+            if (postDesde(ip, "/api/auth/login", intento).status() == 429) {
+                frenadas++;
+            }
+        }
+        assertThat(frenadas).as("el intento 61 desde la misma IP se corta").isEqualTo(1);
     }
 }

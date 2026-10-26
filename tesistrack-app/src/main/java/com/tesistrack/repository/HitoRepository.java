@@ -1,6 +1,7 @@
 package com.tesistrack.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -9,6 +10,9 @@ import com.tesistrack.model.Hito;
 public interface HitoRepository extends JpaRepository<Hito, Long> {
 
     List<Hito> findByProyectoIdOrderByOrdenAsc(Long proyectoId);
+
+    /** El último hito de la tesis, para numerar el siguiente sin traerlos todos. */
+    Optional<Hito> findFirstByProyectoIdOrderByOrdenDesc(Long proyectoId);
 
     /** Guarda contra repartir dos veces la misma actividad al mismo proyecto. */
     boolean existsByProyectoIdAndActividadId(Long proyectoId, Long actividadId);

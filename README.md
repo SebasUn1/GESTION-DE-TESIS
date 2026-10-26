@@ -69,7 +69,7 @@ Copiar [`.env.example`](.env.example) como `.env` junto al `docker-compose.yml` 
 | `DB_PASSWORD` | Clave de PostgreSQL |
 | `CORS_ALLOWED_ORIGINS` | La dirección pública del frontend |
 
-El frontend (nginx) es el único puerto expuesto y reenvía `/api` al backend, que toma la IP real del usuario del encabezado `X-Forwarded-For`. Los límites de frecuencia (login, consulta de correo, mensajes) viven en memoria: alcanzan para un servidor único.
+El frontend (nginx) es el único puerto expuesto y reenvía `/api` al backend con la IP real del usuario en `X-Forwarded-For` (nginx la reemplaza, no confía en la que mande el cliente). Los límites de frecuencia (login, consulta de correo, mensajes) viven en memoria: alcanzan para un servidor único.
 
 ## Documentación del diseño
 

@@ -217,10 +217,11 @@ public class ActividadService {
             .orElse(0) + 1;
     }
 
+    // Se llama una vez por tesis al repartir: con una consulta de un solo hito, y no
+    // con la lista entera, repartir a una clase de 40 no trae 40 listas completas.
     private int siguienteOrdenHito(Long proyectoId) {
-        return hitoRepository.findByProyectoIdOrderByOrdenAsc(proyectoId).stream()
-                .mapToInt(Hito::getOrden)
-                .max()
+        return hitoRepository.findFirstByProyectoIdOrderByOrdenDesc(proyectoId)
+                .map(Hito::getOrden)
                 .orElse(0) + 1;
     }
 

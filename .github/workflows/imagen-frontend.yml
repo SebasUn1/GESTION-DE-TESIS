@@ -15,7 +15,15 @@ permissions:
 
 jobs:
   imagen:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Además de que el CI haya pasado, tiene que ser un push a este repo: el filtro
+    # branches mira el nombre de la rama, y un PR desde un fork con una rama
+    # llamada "main" también lo cumple. Sin esto, un desconocido publicaba :latest.
+    if: >-
+      github.event_name == 'workflow_dispatch' || (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      )
     runs-on: ubuntu-latest
 
     steps:
