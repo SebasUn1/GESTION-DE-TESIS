@@ -23,6 +23,16 @@ Si el script dice *"La demo ya está cargada"*, no duplica nada: sale sin tocar 
 
 Las dos en `http://localhost:3000/login`, ya con la sesión iniciada antes de empezar.
 
+**Si la demo es con la versión en la nube:** la base de la nube arranca vacía, así que las cuentas no existen hasta cargarlas. Se corre el mismo script **una vez**, contra la dirección del backend:
+
+```powershell
+./demo/cargar-demo.ps1 -BaseUrl https://<backend-en-la-nube> -WebUrl https://<frontend-en-vercel>
+```
+
+Dos diferencias con el local:
+- **No se puede ensayar y volver a empezar con un comando.** El ensayo deja la tesis movida (Marco teórico completado, Metodología observada). Para dejarla como al principio hay que vaciar la base desde Supabase, reiniciar el backend y volver a correr el script. Lo práctico es ensayar en local y cargar la nube una sola vez, antes de presentar.
+- **Si el backend está en un plan gratis, se duerme** tras un rato sin uso, y la primera visita tarda casi un minuto. Hay que abrir la página un par de minutos antes de presentar.
+
 **Archivo a mano:** `demo/marco-teorico-v2.pdf` (lo genera el script). Es la corrección que la estudiante sube en vivo.
 
 ## 2. Los perfiles

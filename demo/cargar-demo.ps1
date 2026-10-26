@@ -14,13 +14,20 @@
     Requiere el sistema levantado (docker compose up) y una base sin la demo. Para
     empezar de cero: docker compose down -v ; docker compose up -d
 
+    En la nube (frontend y backend en direcciones distintas) se corre una vez contra
+    el backend, con la base recién creada: -BaseUrl es el backend y -WebUrl el frontend.
+
 .EXAMPLE
     ./demo/cargar-demo.ps1
     ./demo/cargar-demo.ps1 -BaseUrl http://localhost:5173
+    ./demo/cargar-demo.ps1 -BaseUrl https://tesistrack-api.onrender.com -WebUrl https://tesistrack.vercel.app
 #>
 param(
-    # El frontend reenvía /api al backend: en Docker es el 3000, con Vite el 5173.
-    [string]$BaseUrl = 'http://localhost:3000'
+    # Donde responde /api. En Docker el frontend la reenvía (3000), con Vite es el 5173,
+    # y en la nube es la dirección del backend.
+    [string]$BaseUrl = 'http://localhost:3000',
+    # Solo para el link del resumen final: la dirección que abre la gente.
+    [string]$WebUrl = $BaseUrl
 )
 
 $ErrorActionPreference = 'Stop'
@@ -126,11 +133,12 @@ Write-Host "TesisTrack: cargando la demo en $BaseUrl" -ForegroundColor Cyan
 try {
     Invoke-RestMethod "$Api/health" | Out-Null
 } catch {
-    throw "No responde $Api/health. ¿Está levantado el sistema? (docker compose up -d)"
+    throw "No responde $Api/health. ¿Está levantado el sistema? (docker compose up -d, o el backend en la nube)"
 }
 if ((Llamar GET "/auth/existe?email=$AsesorEmail").existe) {
     Write-Host "La demo ya está cargada ($AsesorEmail existe)." -ForegroundColor Yellow
     Write-Host 'Para empezar de cero: docker compose down -v ; docker compose up -d ; y volver a correr este script.'
+    Write-Host 'En la nube: vaciar la base desde Supabase, reiniciar el backend (Flyway recrea las tablas) y volver a correrlo.'
     exit 0
 }
 
@@ -331,7 +339,7 @@ $enVivo = Join-Path $PSScriptRoot 'marco-teorico-v2.pdf'
 
 Write-Host ''
 Write-Host 'Demo cargada.' -ForegroundColor Green
-Write-Host "  Web:         $BaseUrl/login"
+Write-Host "  Web:         $WebUrl/login"
 Write-Host "  Profesor:    $AsesorEmail / $Clave"
 Write-Host "  Estudiante:  $EstudianteEmail / $Clave"
 Write-Host "  Código de la clase: $($clase.codigo)"
