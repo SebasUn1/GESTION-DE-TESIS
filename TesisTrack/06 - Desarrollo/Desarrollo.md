@@ -529,6 +529,14 @@ Rama local `mejoras/calidad`: parte de `feat/mensajes-privados` (la cadena de PR
 - **Producción:** `.env.example` con `JWT_SECRET`, `DB_PASSWORD` y `CORS_ALLOWED_ORIGINS`. `.env` queda ignorado.
 - **Demo:** `demo/cargar-demo.ps1` y `demo/GUION-DEMO.md` (ver [[#Usuarios de prueba]]).
 
+> [!success] Prueba de calidad del 2026-10-25
+> - **Backend:** `mvnw clean verify` da 37 de 37 (Testcontainers). Prueba de mutación: si se quita el límite de login, el test lo detecta.
+> - **Frontend:** `npm ci`, lint (0 errores, los 4 avisos previos de Fast Refresh), 16 de 16 tests y build. Prueba de mutación: con el bug viejo de la fecha, el test da "02 oct" y falla.
+> - **CI:** los tres workflows pasan `actionlint`.
+> - **Stack real en Docker, a través de nginx:** con `JWT_SECRET` vacío el backend no arranca; una IP inventada en `X-Forwarded-For` ya no esquiva el límite; el login da 401×10 y después 429; no hay SQL en el log.
+> - **Navegador (Edge, Playwright), siguiendo el guion de la demo:** 17 de 17. La estudiante sube la v2 y la profesora la ve en *Para revisar*; "Aprobar y completar hito" cierra el hito y resuelve sus observaciones; observar Metodología la deja *Observado*; Seguimiento se ve bien; sin scroll horizontal en 390 px; sin errores de consola.
+> - **Revisión de código** (10 hallazgos): se corrigieron 8. Entre ellos, que un PR desde un fork podía publicar `:latest`, la clave pública como default de un `.env` vacío, la IP falsificable vía nginx, el bloqueo de cuentas ajenas y las marcas de Asesorías privadas sin color (regresión del merge). **Queda para el equipo:** desde #13, el hito generado toma el orden siguiente de la tesis y no el de la actividad. Si el profesor crea una actividad con orden 0 para ponerla primera, a quien ya estaba le llega última y a quien entra después le llega primera.
+
 > [!warning] La Fase 2 quedó respaldada, no integrada
 > El trabajo sin commitear de `D:\UTEC 2` (primer ingreso, grupos, V5, 30 tests) quedó en el commit local `cc7c5b3` de `feat/fase-2-estudiante`, sin revisar y fuera de esta rama. Al retomarla: su `IntegracionTest` agrega `grupal` a `crearTesis`, y sus estilos van en un archivo nuevo al final de `styles/app.css`, no en `panel.css`.
 

@@ -635,7 +635,11 @@ Ver [[API#Mensajes privados]], [[Base de datos#Migración V4 - mensajes privados
 
 **Estado:** ✅ cerrada (2026-10-25) — **siguen siendo dos estados en el backend, pero el visor ofrece "Aprobar y completar hito" junto a "Aprobar entrega"**.
 
-Ensayando la demo se vio que, después de aprobar en el visor, el profesor tenía que ir a Hitos y cambiar el estado a mano: un paso que nadie recuerda y que deja el hito en *Entregado* con su versión ya aprobada. Lo común es que las dos cosas vayan juntas. El atajo hace las dos llamadas que ya existían (`PATCH /entregas/{id}/estado` y `PATCH /hitos/{id}/estado`). No hay endpoint nuevo.
+Ensayando la demo se vio que, después de aprobar en el visor, el profesor tenía que ir a Hitos y cambiar el estado a mano: un paso que nadie recuerda y que deja el hito en *Entregado* con su versión ya aprobada. Lo común es que las dos cosas vayan juntas. El atajo usa llamadas que ya existían (`PATCH /entregas/{id}/estado`, `PATCH /observaciones/{id}/estado` y `PATCH /hitos/{id}/estado`), sin endpoint nuevo.
+
+**También resuelve las observaciones pendientes del hito.** Esto salió del recorrido en el navegador: con el hito completado, las observaciones de la v1 seguían pendientes, y al grupo le aparecía "Subir corrección" en un hito ya terminado. Primero se resuelven las observaciones y después se cierra el hito: si lo primero falla, el hito no queda cerrado con correcciones colgando.
+
+El atajo **no aparece** en una versión que no es la última, porque cerraría el hito sin revisar la versión más nueva, ni en un hito ya completado.
 
 **Alternativa descartada:** que el backend complete el hito solo al aprobar una entrega. Se pierde un caso real (aprobar esta versión y aun así pedir un agregado antes de cerrar), y queda la pregunta de qué hacer con el hito si después se reabre la entrega. Con el atajo en la UI, la regla del backend no cambia y el profesor elige.
 
@@ -646,19 +650,19 @@ Ensayando la demo se vio que, después de aprobar en el visor, el profesor tení
 
 ¿Con qué clave firma los tokens el backend si nadie la configura, y cuántos intentos de login se permiten?
 
-**Estado:** ✅ cerrada (2026-10-25) — **sin clave, el backend no arranca; el login se frena a los 10 intentos por cuenta y 60 por IP por minuto**.
+**Estado:** ✅ cerrada (2026-10-25) — **sin clave, el backend no arranca; el login se frena a los 10 intentos por cuenta desde una misma IP y a los 60 por IP, por minuto**.
 
 `application.properties` traía un valor por defecto para `JWT_SECRET`. Ese valor está en GitHub: un servidor que arrancara sin la variable firmaba con una clave pública, y cualquiera podía armar un token con el correo de otra persona y entrar como ella (`AccesoService` busca al usuario por el correo del token). Ahora `JwtService` exige al menos 32 caracteres y, si faltan, corta el arranque con un mensaje que dice qué hacer. En desarrollo la clave la pone el perfil `dev` y en Docker el compose (con `.env` para un servidor real).
 
-**El límite del login** reusa `LimitadorConsultas`. Es **por cuenta** para frenar a quien prueba contraseñas contra una persona, y **por IP**, más holgado, porque un aula entera sale a internet con la misma IP.
+**El límite del login** reusa `LimitadorConsultas` y tiene dos topes. El primero es **por cuenta desde una IP**: frena a quien prueba contraseñas contra una persona, y lo que queda frenado es el que prueba, no la cuenta, así que la dueña sigue entrando desde su máquina. El segundo es **por IP**, más holgado porque un aula entera sale a internet con la misma IP, y frena a una máquina que recorre muchas cuentas.
 
 > [!warning] El límite por IP no funcionaba detrás de nginx
-> En Docker todas las requests llegaban con la IP del contenedor del frontend, así que el límite de `/auth/existe` (10/min) era **uno solo para todos los usuarios**: en una clase registrándose a la vez, se bloqueaba. Se corrigió con `server.forward-headers-strategy=native`: Tomcat toma la IP real de `X-Forwarded-For`, pero solo si la request viene de una red interna.
+> En Docker todas las requests llegaban con la IP del contenedor del frontend, así que el límite de `/auth/existe` (10/min) era **uno solo para todos los usuarios**: en una clase registrándose a la vez, se bloqueaba. Se corrigió con `server.forward-headers-strategy=native`: Tomcat toma la IP real de `X-Forwarded-For`, pero solo si la request viene de una red interna. Además, nginx **reemplaza** ese encabezado con `$remote_addr` en vez de agregarle la IP (`$proxy_add_x_forwarded_for`). Si lo agregara, alguien desde una red interna podría inventarse una IP en cada request y saltarse los límites.
 
 **Alternativas descartadas:**
 - **Dejar el default y avisar en el log:** nadie lee el log de un servidor que anda bien.
 - **Limitar solo los intentos fallidos:** es más justo, pero obliga a distinguir el resultado antes de contar. Con 10 por minuto, alguien que entra bien nunca llega al tope.
-- **Bloquear la cuenta tras N fallos:** le regala a cualquiera la forma de dejar a otra persona sin entrar.
+- **Bloquear la cuenta tras N fallos**, o el tope **solo por cuenta** (fue la primera versión, corregida en la revisión de código del mismo día): le regala a cualquiera que sepa un correo la forma de dejar a esa persona sin entrar.
 
 > [!note] Consecuencia
 > `./mvnw spring-boot:run` sin perfil ya no arranca: en desarrollo es `-Dspring-boot.run.profiles=dev` (ver [[Desarrollo#Desarrollo con recarga automática]]). El perfil `dev` también es el único que muestra el SQL en el log.
