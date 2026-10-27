@@ -61,7 +61,9 @@ El workflow [CI](.github/workflows/ci.yml) corre todo esto en cada pull request 
 
 ## Producción
 
-Copiar [`.env.example`](.env.example) como `.env` junto al `docker-compose.yml` y completar:
+**Supabase + Render + Vercel:** paso a paso en [`DESPLIEGUE.md`](DESPLIEGUE.md).
+
+**En un servidor propio con Docker:** copiar [`.env.example`](.env.example) como `.env` junto al `docker-compose.yml` y completar:
 
 | Variable | Para qué |
 |---|---|
