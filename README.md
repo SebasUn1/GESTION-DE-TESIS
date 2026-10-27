@@ -53,7 +53,7 @@ Sin el perfil `dev`, el backend **no arranca** si falta `JWT_SECRET`: es a prop�
 
 | Qué | Comando | Qué cubre |
 |---|---|---|
-| Backend | `cd tesistrack-app && ./mvnw verify` | 36 tests. Los de integración levantan su propio PostgreSQL con Testcontainers (hace falta Docker): ciclo de corrección completo, permisos por pertenencia, autenticación y límite de login, reparto de actividades, tipos de archivo, mensajes |
+| Backend | `cd tesistrack-app && ./mvnw verify` | 38 tests. Los de integración levantan su propio PostgreSQL con Testcontainers (hace falta Docker): ciclo de corrección completo, permisos por pertenencia, autenticación y límite de login, reparto de actividades, tipos de archivo, mensajes |
 | Frontend | `cd tesistrack-web && npm test` | 16 tests de las funciones puras: fechas en la zona de Lima, archivos previsualizables, medidor de contraseñas, formato |
 | Lint | `cd tesistrack-web && npm run lint` | oxlint |
 
@@ -61,7 +61,7 @@ El workflow [CI](.github/workflows/ci.yml) corre todo esto en cada pull request 
 
 ## Producción
 
-**Supabase + Render + Vercel:** paso a paso en [`DESPLIEGUE.md`](DESPLIEGUE.md).
+**En la nube (Render + Vercel + Neon o Supabase):** paso a paso en [`DESPLIEGUE.md`](DESPLIEGUE.md).
 
 **En un servidor propio con Docker:** copiar [`.env.example`](.env.example) como `.env` junto al `docker-compose.yml` y completar:
 

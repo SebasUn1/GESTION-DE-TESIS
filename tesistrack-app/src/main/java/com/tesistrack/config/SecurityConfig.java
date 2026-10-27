@@ -38,7 +38,8 @@ public class SecurityConfig {
                 // /error se atiende en un dispatch aparte donde JwtAuthFilter no corre
                 // (OncePerRequestFilter lo saltea). Si lo dejamos protegido, cualquier
                 // error del servidor le llega al cliente como un 401 engañoso.
-                .requestMatchers("/api/auth/**", "/api/health", "/error").permitAll()
+                .requestMatchers("/api/auth/**", "/api/health", "/actuator/health/**", "/error",
+                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
             )
             // Sin esto, una request sin token termina en la página de error por defecto;
