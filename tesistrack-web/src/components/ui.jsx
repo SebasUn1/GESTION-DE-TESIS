@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
+import Icono from './Icono'
 
 export function Card({ titulo, accion, children, className = '' }) {
   return (
@@ -14,12 +17,61 @@ export function Card({ titulo, accion, children, className = '' }) {
   )
 }
 
-export function Vacio({ children, cta }) {
+/**
+ * Estado vacío: un ícono neutro, la explicación y, si hay, la salida (un botón).
+ * Nunca un "no hay datos" seco: dice qué falta y qué hacer.
+ */
+export function Vacio({ children, cta, icono = 'carpeta', titulo }) {
   return (
     <div className="vacio">
+      <span className="vacio__icono">
+        <Icono nombre={icono} />
+      </span>
+      {titulo && <p className="vacio__titulo">{titulo}</p>}
       <p>{children}</p>
       {cta}
     </div>
+  )
+}
+
+/**
+ * Una sección de página con su título fuera de tarjeta (Próximas reuniones, Mis
+ * clases): el contenido son varias tarjetas, no una sola.
+ */
+export function Seccion({ titulo, accion, children, className = '' }) {
+  return (
+    <section className={`panel-seccion ${className}`}>
+      <header className="panel-seccion__head">
+        <h2>{titulo}</h2>
+        {accion}
+      </header>
+      {children}
+    </section>
+  )
+}
+
+/**
+ * El código de invitación de una clase, con su botón para copiarlo. Va en
+ * monoespaciada y con borde punteado: se lee como algo para pasar, no para editar.
+ */
+export function ChipCodigo({ codigo, grande = false }) {
+  const [copiado, setCopiado] = useState(false)
+  return (
+    <span className={`chip-codigo ${grande ? 'chip-codigo--grande' : ''}`}>
+      <code>{codigo}</code>
+      <button
+        type="button"
+        className="chip-codigo__copiar"
+        onClick={() => {
+          navigator.clipboard?.writeText(codigo)
+          setCopiado(true)
+          setTimeout(() => setCopiado(false), 1800)
+        }}
+        aria-label={copiado ? 'Código copiado' : `Copiar el código ${codigo}`}
+      >
+        {copiado ? <span className="chip-codigo__ok">✓ Copiado</span> : <Icono nombre="copiar" />}
+      </button>
+    </span>
   )
 }
 
@@ -47,15 +99,24 @@ export function PageHead({ titulo, descripcion, children }) {
   )
 }
 
+/**
+ * Elige sobre qué tesis trabaja la pantalla. Al estudiante le dice "Tesis"; al
+ * profesor, que elige entre los grupos de sus clases, "Grupo" (y cada opción lleva
+ * quiénes son, porque dos grupos pueden tener el mismo tema).
+ */
 export function SelectorProyecto({ proyectos, activoId, onChange }) {
+  const { user } = useAuth()
   if (proyectos.length <= 1) return null
+  const esAsesor = user?.role === 'ASESOR'
   return (
     <label className="selector-proyecto">
-      <span>Proyecto</span>
+      <span>{esAsesor ? 'Grupo' : 'Tesis'}</span>
       <select value={activoId ?? ''} onChange={(e) => onChange(Number(e.target.value))}>
         {proyectos.map((p) => (
           <option key={p.id} value={p.id}>
-            {p.titulo}
+            {esAsesor
+              ? `${nombres(p.estudiantes)} — ${p.titulo || 'Tema por definir'}`
+              : p.titulo || 'Tema por definir'}
           </option>
         ))}
       </select>
@@ -80,8 +141,8 @@ export function SinProyecto({ rol }) {
           </Link>
         }
       >
-        Todavía no tenés un proyecto de tesis. Al crearlo podés pegar el código que te pasó tu
-        asesor y sumarte a su carpeta.
+        Todavía no tenés una tesis. Al crearla podés pegar el código que te pasó tu profesor y
+        sumarte a su clase.
       </Vacio>
     )
   }
@@ -90,18 +151,18 @@ export function SinProyecto({ rol }) {
     return (
       <Vacio
         cta={
-          <Link className="btn btn--primario" to="/proyectos">
-            Ir a mis espacios
+          <Link className="btn btn--primario" to="/clases">
+            Ir a mis clases
           </Link>
         }
       >
-        Todavía no tenés asesorados. Tu código de invitación está en Mis espacios: pasáselo a tus
-        estudiantes y sus tesis aparecen acá.
+        Todavía no tenés grupos. El código de invitación de tu clase está en Mis clases:
+        pasáselo a tus alumnos y sus tesis aparecen acá.
       </Vacio>
     )
   }
 
-  return <Vacio>Todavía no hay proyectos para consultar.</Vacio>
+  return <Vacio>Todavía no hay tesis para consultar.</Vacio>
 }
 
 /**
@@ -114,17 +175,15 @@ export function nombres(estudiantes) {
   return estudiantes.map((e) => e.name).join(', ')
 }
 
+/**
+ * Una fecha para leer. Las fechas sin hora (`2026-10-03`, las fechas límite) se leen
+ * como día local: `new Date('2026-10-03')` es medianoche UTC, que en Lima todavía es
+ * el día anterior, y la fecha límite se mostraba un día antes.
+ */
 export function fecha(valor) {
   if (!valor) return '—'
-
-  const fechaLocal = /^\d{4}-\d{2}-\d{2}$/.test(valor)
-      ? (() => {
-        const [anio, mes, dia] = valor.split('-').map(Number)
-        return new Date(anio, mes - 1, dia)
-      })()
-      : new Date(valor)
-
-  return fechaLocal.toLocaleDateString('es', {
+  const soloDia = typeof valor === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valor)
+  return new Date(soloDia ? `${valor}T00:00:00` : valor).toLocaleDateString('es', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',

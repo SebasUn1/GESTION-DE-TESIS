@@ -10,7 +10,11 @@ server {
         proxy_ssl_server_name on;
         proxy_set_header Host $proxy_host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Se reemplaza, no se agrega ($proxy_add_x_forwarded_for): nginx es la puerta
+        # de entrada, y lo que mande el cliente en este encabezado es inventable. El
+        # backend lo usa para los límites por IP (LimitadorConsultas). Si algún día va
+        # un balanceador delante, configurar real_ip acá en vez de volver a agregar.
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 

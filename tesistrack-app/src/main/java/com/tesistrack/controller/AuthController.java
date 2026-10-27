@@ -5,22 +5,24 @@ import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tesistrack.model.User;
 import com.tesistrack.service.LimitadorConsultas;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import com.tesistrack.dto.AsesoriasPrivadasRequest;
 import com.tesistrack.dto.AuthResponse;
 import com.tesistrack.dto.LoginRequest;
 import com.tesistrack.dto.RegisterRequest;
-import com.tesistrack.dto.UserDto;
-import com.tesistrack.repository.UserRepository;
+import com.tesistrack.dto.PerfilDto;
+import com.tesistrack.model.User;
 import com.tesistrack.service.AuthService;
+import com.tesistrack.service.PerfilService;
 
 import jakarta.validation.Valid;
 
@@ -28,16 +30,19 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    static final int INTENTOS_LOGIN_POR_CUENTA = 10;
+    static final int INTENTOS_LOGIN_POR_IP = 60;
+
     private final AuthService authService;
-    private final UserRepository userRepository;
+    private final PerfilService perfilService;
     private final LimitadorConsultas limitador;
 
     public AuthController(
             AuthService authService,
-            UserRepository userRepository,
+            PerfilService perfilService,
             LimitadorConsultas limitador) {
         this.authService = authService;
-        this.userRepository = userRepository;
+        this.perfilService = perfilService;
         this.limitador = limitador;
     }
 
@@ -60,16 +65,35 @@ public class AuthController {
         return authService.register(request);
     }
 
+    /**
+     * Sin límite, alguien podía probar contraseñas contra una cuenta sin parar. Hay
+     * dos topes: por cuenta <i>desde una IP</i>, que frena a quien ataca a una
+     * persona, y por IP, más holgado, que frena a una máquina que recorre muchas
+     * cuentas. Holgado porque un aula entera sale a internet con la misma IP.
+     *
+     * <p>El primero no es solo "por cuenta" a propósito: así, cualquiera que supiera
+     * un correo podía dejar a esa persona sin entrar mandando intentos fallidos.
+     * Ahora el que queda frenado es el que prueba, no la cuenta.
+     */
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+    public AuthResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
+        String mensaje = "Demasiados intentos de ingreso. Esperá un minuto y probá de nuevo.";
+        String ip = http.getRemoteAddr();
+        limitador.registrarUso("login-ip:" + ip, INTENTOS_LOGIN_POR_IP, mensaje);
+        limitador.registrarUso("login:" + User.normalizarEmail(request.email()) + "|" + ip,
+            INTENTOS_LOGIN_POR_CUENTA, mensaje);
         return authService.login(request);
     }
 
     @GetMapping("/me")
-    public UserDto me(Authentication authentication) {
-        String email = User.normalizarEmail(authentication.getName());
-        return userRepository.findByEmail(email)
-            .map(UserDto::from)
-            .orElseThrow();
+    public PerfilDto me(Authentication authentication) {
+        return perfilService.perfil(authentication);
+    }
+
+    /** "¿Das asesorías privadas, fuera de una clase?" Solo el asesor. */
+    @PutMapping("/me/asesorias-privadas")
+    public PerfilDto asesoriasPrivadas(
+            @Valid @RequestBody AsesoriasPrivadasRequest request, Authentication authentication) {
+        return perfilService.cambiarAsesoriasPrivadas(request.valor(), authentication);
     }
 }

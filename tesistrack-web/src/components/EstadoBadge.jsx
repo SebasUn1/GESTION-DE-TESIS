@@ -34,7 +34,32 @@ const ENTREGA = {
   APROBADA: { texto: 'Aprobada', icono: '✓', clase: 'completado' },
 }
 
-const MAPAS = { hito: HITO, observacion: OBSERVACION, proyecto: PROYECTO, entrega: ENTREGA }
+/** Ciclo de una asesoría: se programa, se hace o se cancela. */
+const ASESORIA = {
+  PROGRAMADA: { texto: 'Programada', icono: '◷', clase: 'proceso' },
+  REALIZADA: { texto: 'Realizada', icono: '✓', clase: 'completado' },
+  CANCELADA: { texto: 'Cancelada', icono: '✕', clase: 'neutro' },
+}
+
+/**
+ * El semáforo de un grupo entero (Decisión 26): Personas, las tarjetas de clase, el
+ * Dashboard. Siempre ícono + texto: el rojo y el verde se confunden en daltonismo.
+ */
+const GRUPO = {
+  ROJO: { texto: 'Atrasado', icono: '✕', clase: 'alerta' },
+  AMARILLO: { texto: 'En riesgo', icono: '⚠', clase: 'aviso' },
+  VERDE: { texto: 'Al día', icono: '✓', clase: 'completado' },
+  SIN_ACTIVIDAD: { texto: 'Sin empezar', icono: '—', clase: 'neutro' },
+}
+
+const MAPAS = {
+  hito: HITO,
+  observacion: OBSERVACION,
+  proyecto: PROYECTO,
+  entrega: ENTREGA,
+  asesoria: ASESORIA,
+  grupo: GRUPO,
+}
 
 export default function EstadoBadge({ estado, tipo = 'hito' }) {
   const def = MAPAS[tipo]?.[estado] ?? { texto: estado, icono: '•', clase: 'neutro' }

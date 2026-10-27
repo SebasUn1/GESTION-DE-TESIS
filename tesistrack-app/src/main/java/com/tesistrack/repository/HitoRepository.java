@@ -1,6 +1,7 @@
 package com.tesistrack.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,6 +11,9 @@ public interface HitoRepository extends JpaRepository<Hito, Long> {
 
     List<Hito> findByProyectoIdOrderByOrdenAsc(Long proyectoId);
 
+    /** El último hito de la tesis, para numerar el siguiente sin traerlos todos. */
+    Optional<Hito> findFirstByProyectoIdOrderByOrdenDesc(Long proyectoId);
+
     /** Guarda contra repartir dos veces la misma actividad al mismo proyecto. */
     boolean existsByProyectoIdAndActividadId(Long proyectoId, Long actividadId);
 
@@ -17,4 +21,7 @@ public interface HitoRepository extends JpaRepository<Hito, Long> {
 
     /** Todos los hitos de los proyectos de un área, para armar el tablero de una sola vez. */
     List<Hito> findByProyectoAreaId(Long areaId);
+
+    /** Todos los hitos de las tesis de un asesor, para armar su Dashboard con una sola consulta. */
+    List<Hito> findByProyectoAsesorId(Long asesorId);
 }

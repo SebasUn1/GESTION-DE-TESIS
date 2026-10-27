@@ -1,0 +1,155 @@
+---
+title: Arquitectura
+tags:
+  - diseño
+---
+
+# Arquitectura
+
+> [!warning] Actualización — React es obligatorio
+> El profesor exigió explícitamente **React** (versión 18) para el frontend. Esto reemplaza la decisión anterior de Thymeleaf. Se mantiene Spring Boot, pero ahora como **API REST**, no como servidor de vistas.
+
+> [!success] Stack decidido (actualizado)
+> Backend Spring Boot (API REST) + Frontend React 18 (SPA separada). Backend en AWS, frontend en Vercel. Dos despliegues en vez de uno, pero React ya no es opcional.
+
+## Stack tecnológico
+
+| Capa | Tecnología | Motivo |
+|------|-----------|--------|
+| Backend | **Java Spring Boot** (API REST, `@RestController`) | Expone endpoints JSON consumidos por el frontend React. Cumple el Entregable 2 y 3 |
+| Frontend | **React 18** (versión exacta fijada, sin `^`/`~` en package.json) | Exigido explícitamente por el profesor. Fijar la versión evita romper código al "actualizar" a mitad de proyecto — ver [[#Por qué fijar la versión de React]] |
+| Base de datos | **PostgreSQL** | Elegida sobre MySQL: gratis, muy soportada en AWS RDS (free tier) y en Spring Data JPA |
+| Persistencia / ORM | **Spring Data JPA + Hibernate** | Estándar de facto en Spring Boot, evita SQL manual repetitivo |
+| Autenticación | **Spring Security + JWT** (email/contraseña) | Backend valida credenciales y controla acceso por rol; el frontend React consume esos endpoints — ver [[Usuarios y roles]]. Login con Google queda pendiente para más adelante (requiere crear OAuth Client ID en Google Cloud Console) |
+| CI/CD | **GitHub Actions** (dos pipelines: backend y frontend) | Gratis para repos |
+| Despliegue backend | **AWS** — EC2 o Elastic Beanstalk + RDS PostgreSQL (free tier) | Exigido explícitamente en el Entregable 4 |
+| Despliegue frontend | **Vercel** (free tier) | Gratis, óptimo para SPAs de React, deploy automático por push |
+
+Ver [[Entregables y evaluación]] para el detalle completo de requisitos por entregable.
+
+## Por qué fijar la versión de React
+
+Dentro de una misma versión mayor (18.x) los cambios son compatibles hacia atrás. Entre versiones mayores (17→18, 18→19) puede haber *breaking changes*: cambia el render root, el comportamiento de efectos en modo estricto, se eliminan APIs viejas, cambian requisitos de compatibilidad de librerías de terceros.
+
+> [!important] Regla
+> Fijar la versión exacta de React en `package.json` (sin `^` ni `~`) y commitear `package-lock.json`, para que todo el equipo y el CI/CD usen exactamente React 18.x sin sorpresas a mitad de proyecto.
+
+## Por qué se descartó el monolito con Thymeleaf
+
+Era la propuesta original (ver historial más abajo) pero quedó descartada apenas se confirmó que el profesor pide React específicamente — Thymeleaf no es compatible con ese requisito, ya que renderiza HTML en el servidor en vez de usar un framework de frontend en el cliente.
+
+## Estructura del frontend
+
+> [!success] Definida el 2026-08-16
+
+```
+src/
+  api/        client.js (fetch + JWT + corte de sesión en 401) y tesistrack.js (endpoints)
+  auth/       AuthContext.jsx — sesión, revalidación del token contra /auth/me
+  components/ BrandLogo, EstadoBadge, ProgressRing, ui.jsx (Card, PageHead, Vacio…)
+  hooks/      useProyectoActivo — proyecto seleccionado, recordado entre pantallas
+  layouts/    AppLayout.jsx — barra lateral + topbar, menú según rol
+  pages/      Dashboard, Proyectos, Hitos, Login, Pendiente
+  styles/     auth.css (login), app.css (panel), brand.css (logo, compartido)
+```
+
+- **React Router 6** (versión exacta, igual que React). Rutas privadas detrás de `RutaPrivada`, que espera a que se revalide el token guardado antes de decidir.
+- El **menú se arma según el rol**: el coordinador solo ve lo que puede consultar.
+- El **logo** sale de `public/logo.png`; si el archivo no está, cae a una marca provisional en SVG.
+
+### La landing
+
+> [!success] Decidido el 2026-08-16 — va dentro del mismo React, no aparte
+
+Se evaluó hacerla como un sitio estático separado con su propio despliegue. Se descartó: obligaría a duplicar logo, tipografía, paleta y CSS de marca en dos proyectos que se desincronizan solos, sumaría un segundo dominio, y convertiría el "entrar" en un salto entre orígenes. El único argumento a favor era rendimiento y SEO, que en un proyecto de curso sin tráfico no compensa.
+
+Rutas resultantes:
+
+| Ruta | Qué es |
+|---|---|
+| `/` | Landing pública. Con sesión abierta redirige a `/panel` |
+| `/login`, `/registro` | Públicas. Con sesión abierta redirigen a `/panel` |
+| `/panel` y el resto | Detrás de sesión |
+
+**El argumento de la landing es el diagnóstico del [[Contexto]]**: la información de una tesis no falta, está dispersa entre WhatsApp, correo y la carpeta de descargas. La primera pantalla lo muestra literalmente — fragmentos desparramados que se ordenan en una sola columna — antes de explicarlo con palabras.
+
+Las secciones que siguen salen todas del vault: la cadena de [[Reglas de negocio]], las preguntas por rol del [[Alcance]], y una sección con **lo que TesisTrack no es**, tomada de [[Alcance#TesisTrack NO pretende ser]]. Esa última es deliberada: decir qué queda afuera explica el producto mejor que otra lista de features.
+
+> [!warning] Cuidado con los títulos en secciones oscuras
+> `index.css` trae una regla global `h1, h2 { color: var(--text-h) }` que gana por especificidad. Pintó el titular de una sección casi negro sobre fondo navy (contraste 1.2:1) hasta que se puso `color: inherit` en los títulos de la landing. Si se agregan secciones oscuras, verificar el contraste real, no confiar en que hereda.
+
+### La pantalla de bienvenida
+
+El panel izquierdo del login no es decoración: muestra de qué se trata el producto.
+
+Sobre un `<canvas>` animado conviven dos capas. La de ambiente son partículas a la deriva que se enlazan con sus vecinas. La que importa es **la cadena de hitos**: un pulso dorado recorre `Planteamiento → Marco teórico → Metodología` y los va encendiendo, mientras `Resultados` y `Sustentación` quedan tenues. El oro marca lo recorrido y lo apagado, lo que falta — que es literalmente lo que promete el texto al lado ("sabés en qué vas y qué sigue") y lo que pide el [[Alcance]] para el estudiante.
+
+Debajo del texto, una línea de estado acompaña al pulso usando **los mismos badges que el panel**: quien entra ya ve el vocabulario que va a encontrar adentro.
+
+> [!note] Por qué el pulso no llega al final
+> Encender los cinco hitos diría "tesis terminada" y contradiría la etiqueta de estado. El recorrido corta en el hito en curso a propósito.
+
+El oro (`#d8b05c`) viene del mundo académico — sello, birrete — y no del azul tech genérico. Se usa solo en el pulso y en la regla del eyebrow.
+
+La entrada es **una sola secuencia escalonada** en orden de lectura, no efectos sueltos. Todo se desactiva con `prefers-reduced-motion`, que además deja el canvas en un estado fijo en vez de animarlo.
+
+### Color de los estados
+
+Los badges de estado llevan **siempre ícono + texto**; el color es refuerzo, nunca el único canal. No es decorativo: `OBSERVADO` (rojo) y `COMPLETADO` (verde) quedan a ΔE 4.1 en deuteranopía — sin la etiqueta, un asesor daltónico no distinguiría "aprobado" de "hay que corregir". La paleta se validó con el validador de contraste antes de fijarla.
+
+## Por definir
+- Login con Google (Google Identity Services + verificación de token en backend) — pendiente hasta tener el OAuth Client ID
+- ~~Almacenamiento de documentos~~ — resuelto: en PostgreSQL, ver la [[Decisiones pendientes#Decisión 16 - Dónde se guardan los archivos de las entregas|Decisión 16]]
+- Qué corre el pipeline de **tests** (hoy los workflows solo construyen y publican imágenes; ver [[#Despliegue y CI/CD]])
+- Servicio AWS exacto de compute para el backend: EC2 simple vs Elastic Beanstalk vs ECS, y si el frontend va a Vercel o sale de su propio contenedor
+
+## Proyecto de código
+
+> [!success] Backend y frontend en un monorepo, probados juntos
+> - **Backend** — `tesistrack-app/` (Spring Boot 4 + Java 17, Maven). API REST con **Flyway** (esquema versionado), **MapStruct** (`UserMapper`) y **Lombok**. Ver [[Base de datos#Motor]].
+> - **Frontend** — `tesistrack-web/` (React **18.3.1**, versión exacta fijada, Vite). En desarrollo habla con el backend por **proxy de Vite** (`/api` → 8080), igual que nginx en Docker.
+> - Monorepo en https://github.com/kepler04/GESTION-DE-TESIS; el código de trabajo está en `D:\UTEC 2`. *(Las rutas `e:\CLAUDE\UTEC\...` de agosto ya no existen.)*
+> - Verificado end-to-end en navegador real (Playwright + Edge) el 2026-10-07: registro en dos pasos, login, sesión que sobrevive al recargar, token inválido que cierra sesión y logout, tanto en desarrollo (`:5173`) como en Docker (`:3000`).
+
+### Login (email + contraseña)
+
+> [!success] Implementado y verificado end-to-end
+> - **Modelo**: `User` (`model/User.java`) con `name`, `email` único, `passwordHash` (BCrypt), `role` (`Role` enum: `ESTUDIANTE`, `ASESOR`, `COORDINADOR`).
+> - **Regla de negocio**: el rol `COORDINADOR` no se puede autoasignar en el registro (se asigna manualmente) — decisión tomada al implementar, coherente con [[Usuarios y roles#Coordinador académico]].
+> - **JWT**: `JwtService` firma tokens HS256 (claims: email como subject, `role`, `name`), expiración configurable (`app.jwt.expiration-ms`, default 24h). Librería `io.jsonwebtoken` (jjwt) 0.12.6.
+> - **Endpoints** (`AuthController`, prefijo `/api/auth`): `POST /register`, `POST /login` (ambos devuelven `{ token, user }`), `GET /me` (protegido, requiere `Authorization: Bearer <token>`).
+> - **Seguridad**: `SecurityConfig` en modo stateless (sin sesión), `JwtAuthFilter` valida el token en cada request y carga la autoridad `ROLE_<rol>`. Solo `/api/auth/**` y `/api/health` son públicos; el resto requiere token válido.
+> - **Manejo de errores**: `ApiExceptionHandler` devuelve JSON con status correcto — 400 email duplicado / validación, 401 credenciales inválidas.
+> - **Frontend**: `LoginForm.jsx` y `RegisterForm.jsx` (con selector de rol Estudiante/Asesor), `api/auth.js` centraliza las llamadas. `App.jsx` persiste la sesión (`token` + `user`) en `localStorage` y alterna entre login/registro/panel logueado.
+> - **Verificado con Playwright** (navegador real, no solo curl): registro → sesión iniciada → logout → login con el mismo usuario → sesión iniciada de nuevo. Screenshots confirmando cada paso.
+> - **Google login queda pendiente** — decisión explícita de posponerlo hasta tener el OAuth Client ID de Google Cloud Console. Cuando se retome: usar Google Identity Services en el frontend (no `Spring Security oauth2Login` con redirects, por los dominios separados Vercel/AWS) + endpoint backend que verifique el ID token y emita el mismo JWT propio.
+
+## Despliegue y CI/CD
+
+> [!info] Estado al 2026-10-07 — la parte de contenedores está hecha; falta el despliegue
+> **Hecho** (Alonso Castro, PRs #2 a #5, 2026-10-03): Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → **nginx**, que reenvía `/api` al backend, así que el navegador siempre habla con un solo origen); `docker-compose.yml` con base + backend + frontend en el puerto 3000; y dos workflows de GitHub Actions (`imagen-backend.yml`, `imagen-frontend.yml`) que **construyen y publican las imágenes en ghcr.io** al pushear a `main`. Las corridas del 2026-10-03 salieron en verde.
+>
+> **Hecho el 2026-10-25** (rama `mejoras/calidad`, sin pushear): `ci.yml` corre los tests del backend (36, con PostgreSQL vía Testcontainers) y el lint, los tests y el build del frontend en cada PR. Los workflows de imágenes ahora se disparan **solo cuando el CI termina en verde en `main`** y publican el commit que se probó. `JWT_SECRET` es obligatorio ([[Decisiones pendientes#Decisión 30 - La clave JWT es obligatoria y el login tiene límite|D30]]) y el compose lo toma de un `.env`.
+>
+> **Falta**: el despliegue en AWS/Vercel.
+
+> [!important] Por qué nginx y no CORS en producción
+> Servir el frontend y reenviar `/api` desde el mismo origen evita configurar CORS entre dominios y hace que desarrollo (proxy de Vite), Docker (nginx) y producción se comporten igual. Cuando el frontend se despliegue aparte (Vercel), `VITE_API_URL` pasa a apuntar a la URL del backend y vuelve a hacer falta `CORS_ALLOWED_ORIGINS`.
+
+Flujo previsto (la parte de publicar imágenes ya existe; el resto está por validar):
+
+```mermaid
+graph LR
+    A[Push backend a GitHub] --> B[GitHub Actions: build + test]
+    B --> C[Deploy a AWS Elastic Beanstalk]
+    D[Push frontend a GitHub] --> E[Vercel: build + deploy automático]
+    C --> F[API en AWS]
+    E --> G[SPA en Vercel]
+    G -->|fetch / axios| F
+```
+
+## Ver también
+- [[Base de datos]]
+- [[Flujo del sistema]]
+- [[Entregables y evaluación]]
+- [[Usuarios y roles]]
