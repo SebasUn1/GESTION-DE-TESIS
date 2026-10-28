@@ -1,5 +1,7 @@
 import { api, apiDescargarArchivo, apiSubirArchivo } from './client'
 
+export { apiBlob, apiDescargarArchivo } from './client'
+
 // --- proyectos ---
 export const listarProyectos = () => api('/api/proyectos')
 export const obtenerProyecto = (id) => api(`/api/proyectos/${id}`)
@@ -47,8 +49,64 @@ export const eliminarActividad = (areaId, id) =>
 /** Grilla estudiantes × actividades. Solo la ve el dueño del espacio. */
 export const verTablero = (areaId) => api(`/api/areas/${areaId}/tablero`)
 
-// --- panel de asesorados ---
+/** La página de un espacio para cualquiera de sus miembros (el código solo lo ve el dueño). */
+export const verEspacio = (areaId) => api(`/api/areas/${areaId}/espacio`)
+/** Qué se lleva y qué deja borrar el espacio, en números. Solo el dueño. */
+export const resumenEspacio = (areaId) => api(`/api/areas/${areaId}/resumen`)
+
+// --- materiales del espacio: carpetas con enlaces y archivos ---
+export const listarCarpetas = (areaId) => api(`/api/areas/${areaId}/carpetas`)
+export const crearCarpeta = (areaId, nombre) =>
+  api(`/api/areas/${areaId}/carpetas`, { method: 'POST', body: { nombre } })
+export const renombrarCarpeta = (id, nombre) =>
+  api(`/api/carpetas/${id}`, { method: 'PUT', body: { nombre } })
+export const eliminarCarpeta = (id) => api(`/api/carpetas/${id}`, { method: 'DELETE' })
+export const crearMaterialEnlace = (carpetaId, body) =>
+  api(`/api/carpetas/${carpetaId}/materiales`, { method: 'POST', body })
+/** Un material que es un archivo se crea con su contenido en un solo paso. */
+export const subirMaterialArchivo = (carpetaId, archivo, titulo) =>
+  apiSubirArchivo(`/api/carpetas/${carpetaId}/materiales/archivo`, archivo, {
+    method: 'POST',
+    campos: { titulo },
+  })
+export const editarMaterial = (id, body) => api(`/api/materiales/${id}`, { method: 'PUT', body })
+export const eliminarMaterial = (id) => api(`/api/materiales/${id}`, { method: 'DELETE' })
+export const descargarMaterial = (material) =>
+  apiDescargarArchivo(`/api/materiales/${material.id}/archivo`, material.archivoNombre)
+
+// --- sesiones del espacio (clases con enlace para todos los miembros) ---
+export const listarSesiones = (areaId) => api(`/api/areas/${areaId}/sesiones`)
+export const crearSesion = (areaId, body) =>
+  api(`/api/areas/${areaId}/sesiones`, { method: 'POST', body })
+export const actualizarSesion = (id, body) => api(`/api/sesiones/${id}`, { method: 'PUT', body })
+export const eliminarSesion = (id) => api(`/api/sesiones/${id}`, { method: 'DELETE' })
+
+/** Sesiones del espacio y asesorías programadas del usuario, la más próxima primero. */
+export const proximasReuniones = () => api('/api/reuniones/proximas')
+
+/** El profesor y los alumnos agrupados por grupo; qué se ve depende de quién mira. */
+export const verPersonas = (areaId) => api(`/api/areas/${areaId}/personas`)
+
+// --- avisos del Tablón ---
+export const listarAvisos = (areaId) => api(`/api/areas/${areaId}/avisos`)
+export const crearAviso = (areaId, texto) =>
+  api(`/api/areas/${areaId}/avisos`, { method: 'POST', body: { texto } })
+export const eliminarAviso = (id) => api(`/api/avisos/${id}`, { method: 'DELETE' })
+
+// --- Dashboard del profesor: agregado sobre todas sus clases ---
+export const obtenerDashboardAsesor = () => api('/api/dashboard/asesor')
+
+// --- asesorías privadas (uno a uno, fuera de una clase) ---
 export const listarAsesorados = () => api('/api/asesorados')
+/** "¿Das asesorías privadas?" Devuelve el perfil ya actualizado. */
+export const cambiarAsesoriasPrivadas = (valor) =>
+  api('/api/auth/me/asesorias-privadas', { method: 'PUT', body: { valor } })
+
+// --- vista previa de archivos (solo imágenes y PDF verificados por el backend) ---
+export const rutaArchivoMaterial = (materialId) => `/api/materiales/${materialId}/archivo`
+export const rutaArchivoEntrega = (entregaId) => `/api/entregas/${entregaId}/archivo`
+
+// --- panel de asesorados (ver listarAsesorados arriba) ---
 
 // --- hitos ---
 export const listarHitos = (proyectoId) => api(`/api/proyectos/${proyectoId}/hitos`)
@@ -80,6 +138,12 @@ export const cambiarEstadoObservacion = (id, estado) =>
 export const listarAsesorias = (proyectoId) => api(`/api/proyectos/${proyectoId}/asesorias`)
 export const crearAsesoria = (proyectoId, body) =>
   api(`/api/proyectos/${proyectoId}/asesorias`, { method: 'POST', body })
+/** Reprogramar una asesoría que todavía está programada. */
+export const actualizarAsesoria = (id, body) =>
+  api(`/api/asesorias/${id}`, { method: 'PUT', body })
+/** `PROGRAMADA → REALIZADA | CANCELADA`; el resumen se completa al marcarla realizada. */
+export const cambiarEstadoAsesoria = (id, estado, resumen) =>
+  api(`/api/asesorias/${id}/estado`, { method: 'PATCH', body: { estado, resumen } })
 export const listarAcuerdos = (asesoriaId) => api(`/api/asesorias/${asesoriaId}/acuerdos`)
 export const crearAcuerdo = (asesoriaId, descripcion) =>
   api(`/api/asesorias/${asesoriaId}/acuerdos`, { method: 'POST', body: { descripcion } })
@@ -95,3 +159,13 @@ export const completarTarea = (id) => api(`/api/tareas/${id}/completar`, { metho
 
 // --- usuarios ---
 export const listarAsesores = () => api('/api/usuarios/asesores')
+
+// --- mensajes privados uno a uno (Decisión 28) ---
+export const listarContactos = () => api('/api/mensajes/contactos')
+export const listarConversaciones = () => api('/api/mensajes/conversaciones')
+export const verConversacion = (usuarioId) => api(`/api/mensajes/con/${usuarioId}`)
+export const enviarMensaje = (usuarioId, texto) =>
+  api(`/api/mensajes/con/${usuarioId}`, { method: 'POST', body: { texto } })
+export const marcarMensajesLeidos = (usuarioId) =>
+  api(`/api/mensajes/con/${usuarioId}/leidos`, { method: 'PUT' })
+export const contarMensajesNoLeidos = () => api('/api/mensajes/no-leidos')

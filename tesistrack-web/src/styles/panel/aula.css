@@ -1,0 +1,192 @@
+/* ==================================================================
+   El espacio como aula: materiales en carpetas, sesiones y reuniones
+   ================================================================== */
+
+/* Fila de botones de una acción cada uno: se acomoda sola en pantallas chicas. */
+.acciones-fila {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Etiqueta chica de tipo. Siempre lleva texto: el color es solo refuerzo. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 8px;
+  padding: 2px 9px;
+  border-radius: var(--radio-pill);
+  border: 1px solid var(--gris-borde);
+  background: var(--gris-suave);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--gris-tinta);
+  vertical-align: middle;
+}
+
+.tag--enlace {
+  background: var(--acento-suave);
+  border-color: var(--acento-borde);
+  color: var(--acento-tinta);
+}
+
+.tag--archivo {
+  background: var(--violeta-suave);
+  border-color: var(--violeta-borde);
+  color: var(--violeta);
+}
+
+.tag--ahora {
+  margin: 0 0 0 8px;
+  background: var(--ok-suave);
+  border-color: var(--ok-borde);
+  color: var(--ok-tinta);
+}
+
+/* ---------------- materiales ---------------- */
+.materiales {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+
+.carpeta-mat--destacada {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.12);
+}
+
+
+
+
+
+.carpeta-mat__cuenta {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--tinta-3);
+}
+
+.carpeta-mat__vacia {
+  margin: 4px 0 12px;
+  font-size: 13px;
+}
+
+.material {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.materiales__lista li {
+  flex-wrap: wrap;
+}
+
+.materiales__alta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.materiales__alta input {
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--tinta);
+  background: #fff;
+}
+
+.materiales__alta input:focus {
+  outline: none;
+  border-color: var(--acento);
+}
+
+.materiales__form {
+  margin: 8px 0 14px;
+  padding: 14px;
+  border: 1px dashed var(--borde);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.materiales__tipo {
+  display: flex;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 13.5px;
+}
+
+.materiales__tipo legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+
+.materiales__tipo label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.materiales__edicion {
+  width: 100%;
+  margin: 0;
+}
+
+/* ---------------- sesiones y reuniones ---------------- */
+.sesion__form {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.sesiones__pasadas {
+  margin-top: 14px;
+  font-size: 13.5px;
+}
+
+.sesiones__pasadas summary {
+  cursor: pointer;
+  color: var(--tinta-2);
+  padding: 4px 0;
+}
+
+
+
+
+
+.asesoria__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.asesoria__form {
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px dashed var(--borde);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.dialogo__texto p {
+  margin: 0 0 10px;
+}
+
+

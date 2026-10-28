@@ -21,10 +21,21 @@ public class JwtService {
     private final SecretKey signingKey;
     private final long expirationMs;
 
+    /** HS256 pide una clave de al menos 256 bits. */
+    static final int LARGO_MINIMO_SECRETO = 32;
+
     public JwtService(
         @Value("${app.jwt.secret}") String secret,
         @Value("${app.jwt.expiration-ms}") long expirationMs
     ) {
+        // Sin valor por defecto a propósito: un default en el código está publicado en
+        // GitHub, y con él cualquiera firma un token con el correo de otro y entra como
+        // esa persona. Mejor que la aplicación no arranque a que arranque así.
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < LARGO_MINIMO_SECRETO) {
+            throw new IllegalStateException(
+                "Falta la variable de entorno JWT_SECRET (mínimo " + LARGO_MINIMO_SECRETO + " caracteres). "
+                + "En desarrollo, arrancá con el perfil dev: ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev");
+        }
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }

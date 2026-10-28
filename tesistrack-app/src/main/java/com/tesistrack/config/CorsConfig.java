@@ -1,5 +1,6 @@
 package com.tesistrack.config;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +19,14 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        // Se toleran espacios y la barra final: "https://a.app, https://b.app/" es como
+        // lo escribe cualquiera en el panel del hosting, y el navegador manda el origen
+        // sin barra. Sin limpiar, el segundo no coincidía y el login fallaba por CORS.
+        configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
+            .map(String::trim)
+            .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
+            .filter(o -> !o.isEmpty())
+            .toList());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

@@ -1,7 +1,11 @@
 name: Imagen Docker Backend
 
+# Solo se publica lo que pasó el CI: antes se publicaba en cada push a main,
+# aunque los tests fallaran.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -11,16 +15,30 @@ permissions:
 
 jobs:
   imagen:
+    # Además de que el CI haya pasado, tiene que ser un push a este repo: el filtro
+    # branches mira el nombre de la rama, y un PR desde un fork con una rama
+    # llamada "main" también lo cumple. Sin esto, un desconocido publicaba :latest.
+    if: >-
+      github.event_name == 'workflow_dispatch' || (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      )
     runs-on: ubuntu-latest
 
     steps:
+      # El commit que probó el CI, no el último de main (podría haber llegado otro).
       - name: Bajar el código
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Nombre de la imagen (ghcr.io exige minúsculas)
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
           echo "IMAGEN=ghcr.io/${GITHUB_REPOSITORY,,}-backend" >> "$GITHUB_ENV"
-          echo "CORTO=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          echo "CORTO=${SHA::7}" >> "$GITHUB_ENV"
 
       - name: Iniciar sesión en ghcr.io
         uses: docker/login-action@v4
